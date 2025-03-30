@@ -13,6 +13,7 @@ DATA_PATH = "data_storage/raw/the-thao_7.csv"
 DATA_COLUMN = "text"
 LABELED_DATA_DIR = "data_storage/processed"
 LABELED_DATA_FILE = "processed_data.csv"
+# LABELED_DATA_FILE = "processed_data_test.csv"
 # regex: "[0-9]+[\\/\\-\\.][0-9]+"
 
 # OpenAI Model
