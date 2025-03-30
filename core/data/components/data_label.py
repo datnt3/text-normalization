@@ -15,6 +15,7 @@ logging.basicConfig(level=logging.DEBUG,
                     datefmt='%H:%M:%S')
 logger = logging.getLogger()
 
+
 class DataLabel(object):
     def __init__(self, api_key: str = OPENAI_API_KEY, model: str = OPENAI_MODEL):
         self.client = OpenAI(api_key=api_key)
@@ -50,16 +51,37 @@ class DataLabel(object):
 
             result = response.choices[0].message.content
             labeled_datas.append(result)
-            logger.info(f"Finish processing paragraph {raw_datas.index(raw_data)}\n{result}\n")
+            self.save_data_to_file(result)
+            logger.info(
+                f"Finish processing paragraph {raw_datas.index(raw_data)}\n{result}\n")
             logger.info("================================")
 
         return labeled_datas
-      
+
     def save_datas_to_file(self, labeled_datas: List) -> None:
-      data_dict = {"labeled_datas": labeled_datas}
-      
-      df = pd.DataFrame(data_dict)
-      if not os.path.exists(LABELED_DATA_DIR):
-        os.makedirs(LABELED_DATA_DIR, exist_ok=True)
+        data_dict = {"labeled_datas": labeled_datas}
+
+        df = pd.DataFrame(data_dict)
+        if not os.path.exists(LABELED_DATA_DIR):
+            os.makedirs(LABELED_DATA_DIR, exist_ok=True)
+
+        df.to_csv(os.path.join(LABELED_DATA_DIR, LABELED_DATA_FILE),
+                  mode="a", index=False)
+
+    def save_data_to_file(self, labeled_data: str) -> None:
+        if not os.path.exists(LABELED_DATA_DIR):
+            os.makedirs(LABELED_DATA_DIR, exist_ok=True)
+
+        labeled_data_dict = {"labeled_data": [labeled_data]}
         
-      df.to_csv(os.path.join(LABELED_DATA_DIR, LABELED_DATA_FILE), mode="a", index=False)
+        df = pd.DataFrame(labeled_data_dict)
+        df.to_csv(os.path.join(LABELED_DATA_DIR, LABELED_DATA_FILE),
+                  mode='a', encoding='utf-8', index=False, header=False)
+        
+    #!DONE:
+    # Save each paragraph to csv file after responsing
+    #!TODO:
+    # Continue processing from the last paragraph of the last file with true index
+    # - Save index to a log file 
+    # - Load the last index from log file and continue processing
+    # Processing multiple .csv files in a turn

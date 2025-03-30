@@ -16,5 +16,4 @@ class DataEngine(object):
             self.data_path, self.data_column)
 
         data_label = DataLabel()
-        labeled_datas = data_label.label_data(text_datas)
-        data_label.save_datas_to_file(labeled_datas)
+        labeled_datas = data_label.label_data(text_datas[2737:])
