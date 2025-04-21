@@ -1,45 +1,38 @@
-import re
-from typing import List
+import os
 import pandas as pd
+import rootutils
+rootutils.setup_root(__file__,
+                     indicator=(".project-root", "setup.cfg", "setup.py", ".git", "pyproject.toml"),
+                     pythonpath=True)
+from datasets import Dataset
 
+from core.config.config import LABELED_DATA_DIR, TRAIN_DATA_DIR
 
-class DataPreprocessing(object):
-    """
-    1. Regex to identify num/num, num-num, num.num -> Mark ~ #
-    2. Padding 30 words each side from the ~#
-    """
-
-    def __init__(self, text_datas: List[str], config):
-        self.text_datas = text_datas
-        self.config = config
-
-    def identify_nsw(self):
-        processed_text_datas = []
-        for text_data in self.text_datas:
-            modified_text_data = text_data
-            nsws = re.finditer(self.config.regex, text_data)
-            nsws_list = []
-            for nsw in nsws:
-                nsw = nsw.group()
-                nsws_list.append(nsw)
-
-            nsws_list = list(set(nsws_list))
-            for nsw in nsws_list:
-                modified_text_data = modified_text_data.replace(nsw, f"~{nsw}#")
-            processed_text_datas.append(modified_text_data)
-        return processed_text_datas
-    
-    def extract_nsw_sentence(self, processed_text_datas: List[str]):
-        nsw_sentences = []
-        for processed_text_data in processed_text_datas:
-            words = processed_text_data.split()
-            for word in words:
-                if "~" in word and "#" in word:
-                    index = words.index(word)
-                    sen_start_index = max(0, index-30)
-                    sen_end_index = min(len(words)-1,index+30)
-                    nsw_sentence = " ".join(words[sen_start_index:sen_end_index+1])
-                    nsw_sentences.append(nsw_sentence)
-        return nsw_sentences
-
+class DataPreprocessing():
+    def __init__(self, labeled_data_path: str):
+        self.labeled_data_path = labeled_data_path
         
+    def format_data(self):
+        df = pd.read_csv(self.labeled_data_path)
+        conversations = []
+        for index, row in df.iterrows():
+            input = row["input"]
+            s_output = row["s_output"]
+            conversation = [{"role": "system",
+                             "content": "You are a phonetic Vietnamese specialist mastering in Text normalization task in Text To Speech. Do the following task."},
+                            {"role": "user",
+                             "content": f"Convert all the numerical non-standard words into its corresponding phonetic spoken Vietnamese form. \nInput: {input}\nOutput:"},
+                            {"role": "assistant",
+                             "content": f"{s_output}"}
+                            ]
+            conversations.append(conversation)
+        
+        df["conversation"] = conversations
+        dataset = Dataset.from_pandas(df=df)
+        train_data_path = os.path.join(LABELED_DATA_DIR, TRAIN_DATA_DIR)
+        os.makedirs(train_data_path, exist_ok=True)
+        dataset.save_to_disk(dataset_path=train_data_path)
+        
+if __name__=="__main__":
+    data_preprocessing = DataPreprocessing("/Users/datnt/Desktop/code/text-normalization/data_storage/processed/test_train_data1.csv")
+    data_preprocessing.format_data()
