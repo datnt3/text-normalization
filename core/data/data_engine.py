@@ -2,7 +2,7 @@ from core.data.components.data_label import DataLabel
 from core.data.components.data_preprocessing import DataPreprocessing
 from core.data.components.data_raw import DataRaw
 from core.config.config import (
-    OPENAI_API_KEY, DATA_PATH, DATA_COLUMN
+    OPENAI_API_KEY, DATA_PATH, DATA_COLUMN, RAW_DATA_DIR
 )
 
 
@@ -12,8 +12,7 @@ class DataEngine(object):
         self.data_column = data_column
 
     def start_engine(self):
-        text_datas = DataRaw.get_data(
-            self.data_path, self.data_column)
+        datas = DataRaw.get_generator_data(RAW_DATA_DIR)
 
         data_label = DataLabel()
-        labeled_datas = data_label.label_data(text_datas[2737:])
+        labeled_datas = data_label.label_data(raw_datas_generator=datas)

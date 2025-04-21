@@ -1,9 +1,13 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
+data_storage/
+*.txt
+
 ### Python ###
 *.csv
 *.log
+*.log.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
