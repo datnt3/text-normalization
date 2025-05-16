@@ -34,5 +34,5 @@ class DataPreprocessing():
         dataset.save_to_disk(dataset_path=train_data_path)
         
 if __name__=="__main__":
-    data_preprocessing = DataPreprocessing("/Users/datnt/Desktop/code/text-normalization/data_storage/processed/test_train_data1.csv")
+    data_preprocessing = DataPreprocessing("/Users/datnt/Desktop/code/text-normalization/data_storage/processed/vn-text-norm-25k.csv")
     data_preprocessing.format_data()
