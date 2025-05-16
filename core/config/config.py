@@ -11,55 +11,26 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # Data
 DATA_PATH = "data_storage/raw/the-thao_7.csv"
 DATA_COLUMN = "text"
+
 LABELED_DATA_DIR = "data_storage/processed"
 LABELED_DATA_FILE = "processed_data.csv"
-# TRAIN_DATA_DIR = "vn-text-norm-8k"
-TRAIN_DATA_DIR = "vn-text-norm-33k"
+NSW_TAGGED_DATA_FILE = "nsw_tagged_data.csv"
+
+TRAIN_DATA_DIR = "vn-text-norm-25k"
 RAW_DATA_DIR = "data_storage/raw"
 
-# LABELED_DATA_FILE = "processed_data_test.csv"
+TRAIN_TEST_DATA_DIR = "data_storage/train_test"
+TEST_DATA_FILE = "test_data.csv"
+TRAIN_DATA_FILE = "train_data.csv"
+
+RAW_DATA_LENGTH = 500
+
 DATA_CHECKPOINT_DIR = "data_storage/checkpoints"
 DATA_CHECKPOINT_FILE = "data_checkpoints.json"
-# regex: "[0-9]+[\\/\\-\\.][0-9]+"
+NSW_TAGGED_CHECKPOINT_FILE = "nsw_tagged_checkpoints.json"
 
 # OpenAI Model
 OPENAI_MODEL = "gpt-4o-mini"
-
-# Prompts
-USER_PROMPT = """
-You are tasked with transforming a Vietnamese paragraph that contains non-standard words into its corresponding spoken phonetic Vietnamese form.
-
-Your goal is to identify the non-standard words from the given paragraph, which may include links, dates, times, measures, addresses, numbers, currencies, telephone numbers, Roman numerals, scores, fractions, ratios, special characters, and words that are abbreviations or loanwords.
-
-For each non-standard word, you must:
-- Normalize it by converting it into spoken phonetic Vietnamese.
-- Expand abbreviations to their full forms.
-- Convert loanwords into their Vietnamese phonetic equivalents.
-
-Pay special attention to the type "Word," which includes abbreviations (e.g., "ĐHBKHN" to "Đại học Bách Khoa Hà Nội") and loanwords (e.g., "YouTube" to "Diu-túp").
-
-# Output Format
-
-The output should be a single paragraph in Vietnamese where all non-standard words have been transformed appropriately into their phonetic forms. Ensure that the paragraph remains cohesive and clear.
-
-# Examples
-
-**Example 1:**
-- **Input:** "Đại học Bách Khoa Hà Nội là một trong những trường đại học kỹ thuật hàng đầu tại Việt Nam, được thành lập năm 1956. Với bề dày lịch sử hơn 60 năm, ĐHBKHN đã trở thành cái nôi đào tạo hàng nghìn kỹ sư, nhà khoa học và chuyên gia công nghệ xuất sắc, đóng góp tích cực vào sự phát triển của đất nước"
-- **Output:** "Đại học Bách Khoa Hà Nội là một trong những trường đại học kỹ thuật hàng đầu tại Việt Nam, được thành lập năm một ngìn chín trăm năm mươi sáu. Với bề dày lịch sử hơn sáu mươi năm, đại học bách khoa hà nội đã trở thành cái nôi đào tạo hàng nghìn kỹ sư, nhà khoa học và chuyên gia công nghệ xuất sắc, đóng góp tích cực vào sự phát triển của đất nước"
-
-**Example 2:**
-- **Input:** "huấn luyện viên Philippe Troussier chỉ ra nguyên nhân khiến U việt nam thua Indonesia đáng tiếc 2-3 ở trận bán kết Seagame 2018 là do thiếu bản lĩnh kinh nghiệm nhưng không vì thế mà ông mất niềm tin vào các cầu thủ"
-- **Output:** "huấn luyện viên phi-líp tru-xi-ê chỉ ra nguyên nhân khiến u việt nam thua in-đô-nê-xi-a đáng tiếc hai ba ở trận bán kết xi ghêm hai nghìn không trăm mười tám là do thiếu bản lĩnh kinh nghiệm nhưng không vì thế mà ông mất niềm tin vào các cầu thủ"
-
-**Example 3:**
-- **Input:** "điều này đồng nghĩa những mẫu Iphone đã 5-6 năm tuổi như Iphone 6S, Iphone 6S Plus và Iphone SE vẫn được Apple hỗ trợ cập nhật lên IOS 16 mới nhất vào 3/2/2019"
-- **Output:** "điều này đồng nghĩa những mẫu ai-phôn đã từ năm đến sáu năm tuổi như ai-phôn sáu ét, ai-phôn sáu ét p-lớt và ai-phôn se vẫn được áp-pồ hỗ trợ cập nhật lên ai-ô-ét mười sáu mới nhất vào ngày ba tháng 2 năm hai nghìn không trăm mười chín"
-
-# Notes
-
-Ensure that all transformations are accurate and consider the context in which the non-standard words are used. Maintain the coherence of the paragraph while making the transformations.
-"""
 
 SYSTEM_PROMPT = """
 Given a task description or existing prompt, produce a detailed system prompt to guide a language model in completing the task effectively.
@@ -150,6 +121,380 @@ The output must be structured in JSON format, with each element containing the f
   - Remember to handle edge cases, such as multiple NSW in a single sentence or different formats of dates and times.
   - Ensure that all transformations are accurate with the most natural and proper manner in Vietnamese. Consider the context in which the numerical non-standard words are used and maintain the coherence of the paragraph while making the transformations.
 """
+
+# FIXME: Add rule to match confusing types: measure, currency, roman
+REGEX_RULE_LIST = [
+    {
+        "name": "DMDMY",
+        "pattern": r"(?<![\w\/\.])(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[-]\s*(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
+        "priority": 1,
+    },
+    {
+        "name": "DDMY",
+        "pattern": r"\b(?:(ngày|ngay)\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[-]\s*(?:(ngày|ngay)\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})\b",
+        "priority": 2,
+    },
+    {
+        "name": "DMDM",
+        "pattern": r"(?<![\w\/\.])(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[-]\s*(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])(?![\w\/])",
+        "priority": 3,
+    },
+    {
+        "name": "DMYDMY",
+        "pattern": r"(?<![\w\/\.])(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})\s*[-]\s*(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
+        "priority": 4,
+    },
+    {
+        "name": "MYMY",
+        "pattern": r"(?<![\w\/\.])(?:tháng|thang)?\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})\s*[-]\s*(?:tháng|thang)?\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
+        "priority": 5,
+    },
+    {
+        "name": "DMY",
+        "pattern": r"(?<![\w\/\.])(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)?\s*(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
+        "priority": 6,
+    },
+    {
+        "name": "MMY",
+        "pattern": r"(?<![\w\/\.])(?:tháng|thang)?\s*(0?[1-9]|1[0-2])\s*[-]\s*(?:tháng|thang)?\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
+        "priority": 7,
+    },
+    {
+        "name": "QQY",
+        "pattern": r"(?<![\w\/\.])(?:quý|quy)\s*([0?[1-4]|I|II|III|IV])\s*[-]\s*(?:quý|quy)?\s*([0?[1-4]|I|II|III|IV])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
+        "priority": 8,
+    },
+    {
+        "name": "DDM",
+        "pattern": r"(?<![\w\/\.])(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)\s*(0?[1-9]|[12][0-9]|3[01])\s*[-]\s*(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)?\s*(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])(?![\w\/])",
+        "priority": 9,
+    },
+    {
+        "name": "QQ",
+        "pattern": r"(?<![\w\/\.])(?:quý|quy)\s*([0?[1-4]|I|II|III|IV])\s*[-]\s*(?:quý|quy)?\s*([0?[1-4]|I|II|III|IV])(?![\w\/])",
+        "priority": 10,
+    },
+    {
+        "name": "DD",
+        "pattern": r"(?<![\w\/\.])(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)\s*(0?[1-9]|[12][0-9]|3[01])\s*[-]\s*(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)?\s*(0?[1-9]|[12][0-9]|3[01])(?![\w\/])",
+        "priority": 11,
+    },
+    {
+        "name": "MM",
+        "pattern": r"(?<![\w\/\.])(?:tháng|thang)\s*(0?[1-9]|1[0-2])\s*[-]\s*(?:tháng|thang)?\s*(0?[1-9]|1[0-2])(?![\w\/])",
+        "priority": 12,
+    },
+    {
+        "name": "YY",
+        "pattern": r"(?<![\w\/\.])(?:năm|nam)\s*([0-9]{1,4})\s*[-]\s*(?:năm|nam)?\s*([0-9]{1,4})(?![\w\/])",
+        "priority": 13,
+    },
+    {
+        "name": "MY",
+        "pattern": r"(?<![\w\/\.])(?:tháng|thang)\s*(0?[1-9]|1[0-2])\s*[\.\/\-]\s*([1-9][0-9]{2,3})(?![\w\/])",
+        "priority": 14,
+    },
+    {
+        "name": "DM",
+        "pattern": r"(?<![\w\/\.])(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)\s*(0?[1-9]|[12][0-9]|3[01])\s*[\.\/\-]\s*(0?[1-9]|1[0-2])(?![\w\/])",
+        "priority": 15,
+    },
+    {
+        "name": "QY",
+        "pattern": r"(?<![\w\/\.])(?:quý|quy)\s*([0?[1-4]|I|II|III|IV])\s*[\.\/\-]\s*([1-9][0-9]{2,3})(?![\w\/])",
+        "priority": 16,
+    },
+    {  # dang thay do
+        "name": "HMSHMS",
+        "pattern": r"\b(\d{1,2})[hg:](\d{1,2})[mp':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?\s*[-–—−]\s*(\d{1,2})[hg:](\d{1,2})[mp':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?(?=\W|$)",
+        "priority": 17,
+    },
+    {
+        "name": "HMHM",
+        "pattern": r"\b(\d{1,2})[hg:](\d{1,2})(?:[p'\u2032m]?)\s*[-–—−]\s*(\d{1,2})[hg:](\d{1,2})(?:[p'\u2032m]?)(?=\W|$)",
+        "priority": 18,
+    },
+    {
+        "name": "MSMS",
+        "pattern": r"\b(\d{1,2})[mp':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?\s*[-–—−]\s*(\d{1,2})[mp':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?(?=\W|$)",
+        "priority": 19,
+    },
+    {
+        "name": "HMS",
+        "pattern": r"\b(\d{1,2})[hg:](\d{1,2})[mp':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?(?=\W|$)",
+        "priority": 20,
+    },
+    {
+        "name": "HH",
+        "pattern": r"\b(\d{1,2})\s*[hg]?\s*[-–—−]\s*(\d{1,2})\s*[hg]\b",
+        "priority": 21,
+    },
+    {
+        "name": "T_MM",
+        "pattern": r"\b(\d{1,2})\s*[p'\u2032]?\s*[-–—−]\s*(\d{1,2})\s*[p'\u2032](?=\W|$)",
+        "priority": 22,
+    },
+    {
+        "name": "SS",
+        "pattern": r"\b(\d{1,2})\s*(?:''|s|\u2032\u2032)?\s*[-–—−]\s*(\d{1,2})\s*(?:''|s|\u2032\u2032)(?=\W|$)",
+        "priority": 23,
+    },
+    {
+        "name": "HM",
+        "pattern": r"\b(\d{1,2})[hg](\d{1,2})[mp'\u2032]?(?=\W|$)",
+        "priority": 24,
+    },
+    {
+        "name": "MS",
+        "pattern": r"\b(\d{1,2})[mp'\u2032](\d{1,2})(?:''|s|\u2032\u2032)?(?=\W|$)",
+        "priority": 25,
+    },
+    {
+        "name": "TEL1",
+        "pattern": r"(?<!\w)(?:\(?\+?84\)?)[-. ]?((?:\d[ .]?){9,10})(?!\w)",
+        "priority": 26,
+    },
+    {
+        "name": "TEL2",
+        "pattern": r"(?<!\w)(\(?0\d{2}\)?)[-. ]?((?:\d[ .]?){8})(?!\w)",
+        "priority": 27,
+    },
+    {
+        "name": "TEL3",
+        "pattern": r"(?<!\w)0[-. ]?((?:\d[ .]?){9})(?!\w)",
+        "priority": 28,
+    },
+    {
+        "name": "TEL4",
+        "pattern": r"(?<!\w)1[8|9]00[-. ]?((?:\d[ .]?){4,6})(?!\w)",
+        "priority": 29,
+    },
+    {
+        "name": "MATH_OPERATOR",
+        "pattern": r"(?<![\w])((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))(?:\s?([\+\*x])\s?((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))){1,2}(?![\w])",
+        "priority": 30,
+    },
+    {
+        "name": "CURRENCY_RANGE",
+        "pattern": r"(?<![\w])(((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)?\s?[-–—−]\s?((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)|(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)\s?((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?[-–—−]\s?(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)?\s?((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0)))(?![\w])",
+        "priority": 31,
+    },
+    {
+        "name": "CURRENCY",
+        "pattern": r"(?<![\w])(((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)|(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)\s?((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0)))(?![\w])",
+        "priority": 32,
+    },
+    {
+        "name": "HOUR_MEASURE",
+        "pattern": r"(?<![\w])((?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?g(?![\w])",
+        "priority": 33,
+    },
+    {
+        "name": "MEASURE_RANGE",
+        "pattern": r"(?<![\w])((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?[-–—−]\s?((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(l\/100km|(?:km|cm|m|mg|mmol)\/(?:h|s|l|kg)|[khdcmμnp][gm]|m|in|J|kJ|cal|kcal|Wh|kWh|W|kW|MW|m2|m²|km2|km²|cm2|cm²|ft2|ft²|ha|L|mL|m³|m3|cm³|cm3|oz|°C|Hz|kHz|GHz|B|KB|MB|GB|TB)(?![\w])",
+        "priority": 34,
+    },
+    {
+        "name": "MEASURE",
+        "pattern": r"(?<![\w])((?:\-|\+)?(?:\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(l\/100km|(?:km|cm|m|mg|mmol)\/(?:h|s|l|kg)|[khdcmμnp][gm]|m|in|J|kJ|cal|kcal|Wh|kWh|W|kW|MW|m2|m²|km2|km²|cm2|cm²|ft2|ft²|ha|L|mL|m³|m3|cm³|cm3|oz|°C|Hz|kHz|GHz|B|KB|MB|GB|TB)(?![\w])",
+        "priority": 35,
+    },
+    {
+        "name": "RANGE",
+        "pattern": r"(?<!\w)((\d+,\d+)\s*[-–—−]\s*(\d+(?:,\d+)?)|(\d+(?:,\d+)?)\s*[-–—−]\s*(\d+,\d+))(?![\w\,])",
+        "priority": 36,
+    },
+    {
+        "name": "FRACTION",
+        "pattern": r"(?<!\w)((\d+,\d+)\s*\/\s*(\d+(?:,\d+)?)|(\d+(?:,\d+)?)\s*\/\s*(\d+,\d+))(?![\w\,])",
+        "priority": 37,
+    },
+    {
+        "name": "NUM:NUM",
+        "pattern": r"(?<![\w])((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6})):((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))(?![\w])",
+        "priority": 38,
+    },
+    {
+        "name": "NUM-NUM",
+        "pattern": r"(?<![\w])((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))\s*[-–—−]\s*((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))(?![\w])",
+        "priority": 39,
+    },
+    {
+        "name": "NUM/NUM",
+        "pattern": r"(?<![\w])((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))\s*/\s*((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))(?![\w])",
+        "priority": 40,
+    },
+    {
+        "name": "NUM_INT1",
+        "pattern": r"(?<![\d\.])((?:\\-|\\+)?(?:[1-9][0-9]{0,2}(?:[\.][0-9]{3}){1,5}))(?!\w)",
+        "priority": 41,
+    },
+    {
+        "name": "NUM.NUM",
+        "pattern": r"(?<![\w])((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))\.((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))(?![\w])",
+        "priority": 42,
+    },
+    {
+        "name": "NUM_FLOAT",
+        "pattern": r"(\d+,\d+)",
+        "priority": 43,
+    },
+    {
+        "name": "NUM_INT",
+        "pattern": r"(?<![\d\.])((?:\\-|\\+)?(?:[1-9][0-9]{0,2}(?:[\\.][0-9]{3}){1,5}|[1-9][0-9]{0,14}[0]{3}|[1-9][0-9]{0,6}|0))",
+        "priority": 44,
+    },
+    {
+        "name": "ROMAN_RANGE",
+        "pattern": r"(?<!\w)([IVX]{1,5})\s*[-–—−]\s*([IVX]{1,5})(?!\w)",
+        "priority": 45,
+    },
+    {
+        "name": "ROMAN",
+        "pattern": r"(?<!\w)([IVX]{1,5})(?!\w)",
+        "priority": 46,
+    },
+]
+
+CONFUSED_NSW_DICT = {
+    "HOUR_MEASURE": {
+        "true_labels": """
+        - HOUR: Hour format
+        - MEASURE: Gram unit in measurement units
+        """,
+        "examples": """
+        - **Input**: Ngày hôm nay ~3/10#DM, tôi đi khỏi nhà lúc ~5g#HOUR_MEASURE
+        - **Output**: {
+            "tagged_sentence": "Ngày hôm nay ~3/10#DM, tôi đi khỏi nhà lúc ~5g#HOUR"
+            "tags": "HOUR"
+        }
+        - **Input**: Lúc ~19h#HOUR_MEASURE, tôi đi chợ mua ~1.000g#HOUR_MEASURE muối
+        - **Output**: {
+            "tagged_sentence": "Lúc ~19h#HOUR, tôi đi chợ mua ~1.0000g#MEASURE muối"
+            "tags": "HOUR, MEASURE"
+        }
+        """
+    },
+    "NUM:NUM": {
+        "true_labels": """
+        - RATIO: ratio between two numbers
+        - HM: Hours and Minutes format
+        - MS: Minutes and Seconds format
+        """,
+        "examples": """
+        - **Input**: Nhà tắm nên chọn ~2#NUM_INT màu gạch chia ngang phần tường thành ~2#NUM_INT mảng màu theo tỷ lệ ~1:1#NUM:NUM
+        - **Output**: {
+            "tagged_sentence": "Nhà tắm nên chọn ~2#NUM_INT màu gạch chia ngang phần tường thành ~2#NUM_INT mảng màu theo tỷ lệ ~1:1#RATIO"
+            "tags": "RATIO"
+        }
+        - **Input**: Lúc ~15:30#NUM:NUM, tôi chia bánh theo tỉ lệ ~1:3#NUM:NUM
+        - **Output**: {
+            "tagged_sentence": "Lúc ~15:30#HM, tôi chia bánh theo tỉ lệ ~1:3#RATIO"
+            "tags": "HM, RATIO"
+        }
+        - **Input**: Việt Nam thắng vào phút ~15:30#NUM:NUM
+        - **Output**: {
+            "tagged_sentence": "Việt Nam thắng vào phút ~15:30#MS"
+            "tags": "MS"
+        }
+        """
+    },
+    "NUM-NUM": {
+        "true_labels": """
+        - RANGE: a span of values between two numbers
+        - SCORE: Numerical results
+        - DM: Date and Month format
+        - MY: Month and Year format
+        """,
+        "examples": """
+        - **Input**: Cũng trong ~chiều 23/4#DM, Thường trực Huyện ủy Vĩnh Lộc đã họp và thống nhất cho ông Hà Nguyên Phấn không ứng cử đại biểu HĐND xã khóa XX, nhiệm kỳ ~2021-2026#NUM-NUM.
+        - **Output**: {
+            "tagged_sentence": "Cũng trong ~chiều 23/4#DM, Thường trực Huyện ủy Vĩnh Lộc đã họp và thống nhất cho ông Hà Nguyên Phấn không ứng cử đại biểu HĐND xã khóa XX, nhiệm kỳ ~2021-2026#RANGE"
+            "tags": "RANGE"
+        }
+        - **Input**: ~3/10#NUM-NUM, cuối hiệp ~1#NUM_INT, tỷ số được nâng lên ~2-0#NUM-NUM cũng sau một đường tấn công biên.
+        - **Output**: {
+            "tagged_sentence": "~3/10#DM, cuối hiệp ~1#NUM_INT, tỷ số được nâng lên ~2-0#SCORE cũng sau một đường tấn công biên."
+            "tags": "DM, SCORE"
+        }
+        - **Input**: Từ ~8-2024#NUM-NUM đến ~9-2024#NUM-NUM, tôi đi công tác.
+        - **Output**: {
+            "tagged_sentence": "Từ ~8-2024#MY đến ~9-2024#MY, tôi đi công tác."
+            "tags": "MY"
+        }
+        """
+    },
+    "NUM/NUM": {
+        "true_labels": """
+        - FRACTION: a part of a whole
+        - DM: Date and Month format
+        - MY: Month and Year format
+        """,
+        "examples": """
+        - **Input**: Sáng nay, ~5/10#NUM/NUM, ~8#NUM_INT đội bóng đã bước vào trận thi đấu đầu tiên.
+        - **Output**: {
+            "tagged_sentence": "Sáng nay, ~5/10#DM, ~8#NUM_INT đội bóng đã bước vào trận thi đấu đầu tiên."
+            "tags": "DM"
+        }
+        - **Input**: Đến nay, ~19/10#NUM/NUM, MU đã thua ~3/6#NUM/NUM trận tại Premier League và tụt xuống thứ ~12#NUM_INT trên BXH
+        - **Output**: {
+            "tagged_sentence": "Đến nay, ~19/10#DM, MU đã thua ~3/6#FRACTION trận tại Premier League và tụt xuống thứ ~12#NUM_INT trên BXH"
+            "tags": "DM, FRACTION"
+        }
+        - **Input**: Từ ~8/2024#NUM/NUM, anh ấy định cư ở Mỹ.
+        - **Output**: {
+            "tagged_sentence": "Từ ~8/2024#MY, anh ấy định cư ở Mỹ."
+            "tags": "MY"
+        }
+        """
+    },
+    "NUM.NUM": {
+        "true_labels": """
+        - NUM_FLOAT: a floating-point number
+        - DM: Date and Month format
+        - MY: Month and Year format
+        """,
+        "examples": """
+        - **Input**: Bên cạnh đó, chị cũng nhận được phần thưởng ~5000#NUM_INT Đô la Hồng Kong (tương đương hơn ~13.5#NUM.NUM triệu VNĐ).
+        - **Output**: {
+            "tagged_sentence": "Bên cạnh đó, chị cũng nhận được phần thưởng ~5000#NUM_INT Đô la Hồng Kong (tương đương hơn ~13.5#NUM_FLOAT triệu VNĐ)."
+            "tags": "NUM_FLOAT"
+        }
+        - **Input**: Hôm nay, ~08.09#NUM.NUM, Perez đã chiêu mộ Luis Figo của Barcelona với mức giá ~71.6#NUM.NUM triệu euro
+        - **Output**: {
+            "tagged_sentence": "Hôm nay, ~08.09#DM, Perez đã chiêu mộ Luis Figo của Barcelona với mức giá ~71.6#NUM_FLOAT triệu euro"
+            "tags": "DM, NUM_FLOAT"
+        }
+        - **Input**: Từ ~10.2025#NUM.NUM, mức phạt cho việc vượt đèn đỏ là ~10.5#NUM.NUM triệu.
+        - **Output**: {
+            "tagged_sentence": "Từ ~10.2025#MY, mức phạt cho việc vượt đèn đỏ là ~10.5#NUM_FLOAT triệu."
+            "tags": "MY, NUM_FLOAT"
+        }
+        """
+    }
+}
+
+NSW_TAG_PROMPT = """
+Based on the context of the sentence, classify the {category} category non-standard words which is placed in the pattern ~NSW#{category} into one of these labels:
+{true_labels}
+Replace the true labels back into the sentence.
+
+### Output Format
+
+The output must be structured in JSON format, with each element containing the following fields:
+  - **tagged_sentence**: The full sentence containing the numerical non-standard words with the true label classified.
+  - **tags**: The string containing all new tags classified, seperated by comma.
+  
+### Example
+
+{examples}
+
+### Notes
+
+- Remember to focus on the context of the sentence to enhance classifying quality.
+- Ensure that all classifications are accurate and the tags list returned contains enough number of new labels.
+"""
+
 
 # Logging
 LOGGING_CONFIG_FILE = "core/config/logging_config.conf"
