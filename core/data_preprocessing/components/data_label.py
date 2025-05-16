@@ -104,7 +104,6 @@ class DataLabel(object):
             file = file_path
             index = 0
         gpt_label_data = pd.read_csv(file)
-        # gpt_label_data = gpt_label_data.dropna()
         inputs = gpt_label_data["input"].to_list()
         print(index)
         processed_data = gpt_label_data.iloc[index:]
@@ -112,17 +111,18 @@ class DataLabel(object):
 
         datas = []
         for index, row in processed_data.iterrows():
+            is_confused = False
             input = row["input"]
             s_output = row["s_output"]
             match_names = rule.apply_rule(input)
             tagged_sentence, tags = rule.tag_sentence(input, match_names)
             # FIXME: Use GPT to classify sentence having NUM:NUM, NUM-NUM, NUM/NUM, NUM.NUM
             for tag in tags:
+                print(tag)
                 if tag in CONFUSED_NSW_DICT.keys():
                     is_confused = True
                     break
-                is_confused = False
-
+            
             if is_confused:
                 gpt_tagged_sentence, gpt_tags, original_tags = self.gpt_nsw_tag(
                     tags, CONFUSED_NSW_DICT.keys(), tagged_sentence
@@ -182,6 +182,7 @@ class DataLabel(object):
     def gpt_nsw_tag(self, tags: List, categories: List, input: str):
         gpt_tags = []
         original_tags = tags.copy()
+        
         for category in categories:
             if category in tags:
                 tags.remove(category)
@@ -194,10 +195,7 @@ class DataLabel(object):
                         gpt_tags.append(result_tag.strip())
 
         tagged_sentence = result["tagged_sentence"]
-        # print(tags)
-        # print(gpt_tags)
         tags.extend(gpt_tags)
-        # print(type(tags))
         final_tags = list(set(tags))
 
         return tagged_sentence, final_tags, original_tags
