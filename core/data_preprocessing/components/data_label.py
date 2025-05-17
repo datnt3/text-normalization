@@ -105,45 +105,46 @@ class DataLabel(object):
             index = 0
         gpt_label_data = pd.read_csv(file)
         inputs = gpt_label_data["input"].to_list()
-        print(index)
         processed_data = gpt_label_data.iloc[index:]
         rule = Rule(REGEX_RULE_LIST)
 
         datas = []
         for index, row in processed_data.iterrows():
-            is_confused = False
-            input = row["input"]
-            s_output = row["s_output"]
-            match_names = rule.apply_rule(input)
-            tagged_sentence, tags = rule.tag_sentence(input, match_names)
-            # FIXME: Use GPT to classify sentence having NUM:NUM, NUM-NUM, NUM/NUM, NUM.NUM
-            for tag in tags:
-                print(tag)
-                if tag in CONFUSED_NSW_DICT.keys():
-                    is_confused = True
-                    break
-            
-            if is_confused:
-                gpt_tagged_sentence, gpt_tags, original_tags = self.gpt_nsw_tag(
-                    tags, CONFUSED_NSW_DICT.keys(), tagged_sentence
-                )
-                data = {
-                    "input": input,
-                    "s_ouput": s_output,
-                    "tagged_sentence": tagged_sentence,
-                    "tags": "; ".join(original_tags),
-                    "gpt_tagged_sentence": gpt_tagged_sentence,
-                    "gpt_tags": "; ".join(gpt_tags),
-                }
-            else:
-                data = {
-                    "input": input,
-                    "s_ouput": s_output,
-                    "tagged_sentence": tagged_sentence,
-                    "tags": "; ".join(tags),
-                    "gpt_tagged_sentence": "",
-                    "gpt_tags": "",
-                }
+            try:
+                is_confused = False
+                input = row["input"]
+                s_output = row["s_output"]
+                match_names = rule.apply_rule(input)
+                tagged_sentence, tags = rule.tag_sentence(input, match_names)
+                # FIXME: Use GPT to classify sentence having NUM:NUM, NUM-NUM, NUM/NUM, NUM.NUM
+                for tag in tags:
+                    if tag in CONFUSED_NSW_DICT.keys():
+                        is_confused = True
+                        break
+                
+                if is_confused:
+                    gpt_tagged_sentence, gpt_tags, original_tags = self.gpt_nsw_tag(
+                        tags, CONFUSED_NSW_DICT.keys(), tagged_sentence
+                    )
+                    data = {
+                        "input": input,
+                        "s_ouput": s_output,
+                        "tagged_sentence": tagged_sentence,
+                        "tags": "; ".join(original_tags),
+                        "gpt_tagged_sentence": gpt_tagged_sentence,
+                        "gpt_tags": "; ".join(gpt_tags),
+                    }
+                else:
+                    data = {
+                        "input": input,
+                        "s_ouput": s_output,
+                        "tagged_sentence": tagged_sentence,
+                        "tags": "; ".join(tags),
+                        "gpt_tagged_sentence": "",
+                        "gpt_tags": "",
+                    }
+            except:
+                continue
 
             datas.append(data)
 
