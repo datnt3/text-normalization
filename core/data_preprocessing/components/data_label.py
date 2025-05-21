@@ -128,7 +128,7 @@ class DataLabel(object):
                     )
                     data = {
                         "input": input,
-                        "s_ouput": s_output,
+                        "s_output": s_output,
                         "tagged_sentence": tagged_sentence,
                         "tags": "; ".join(original_tags),
                         "gpt_tagged_sentence": gpt_tagged_sentence,
@@ -137,7 +137,7 @@ class DataLabel(object):
                 else:
                     data = {
                         "input": input,
-                        "s_ouput": s_output,
+                        "s_output": s_output,
                         "tagged_sentence": tagged_sentence,
                         "tags": "; ".join(tags),
                         "gpt_tagged_sentence": "",
@@ -204,4 +204,6 @@ class DataLabel(object):
 
 if __name__ == "__main__":
     data_label = DataLabel()
-    data_label.tag_data_nsw("data_storage/processed/processed_data.csv")
+    print("dat")
+    data_label.tag_data_nsw("data_storage/processed/wrong_tags_data.csv")
+    print("done")
