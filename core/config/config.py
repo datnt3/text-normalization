@@ -14,14 +14,18 @@ DATA_COLUMN = "text"
 
 LABELED_DATA_DIR = "data_storage/processed"
 LABELED_DATA_FILE = "processed_data.csv"
-NSW_TAGGED_DATA_FILE = "nsw_tagged_data.csv"
+# NSW_TAGGED_DATA_FILE = "nsw_tagged_data.csv"
+NSW_TAGGED_DATA_FILE = "retagged_data.csv"
+WRONG_TAGS_DATA_FILE = "wrong_tags_data.csv"
+TRUE_TAGS_DATA_FILE = "true_tags_data.csv"
 
-TRAIN_DATA_DIR = "vn-text-norm-25k"
+TRAIN_DATA_DIR = "vn-text-norm-300k"
 RAW_DATA_DIR = "data_storage/raw"
 
 TRAIN_TEST_DATA_DIR = "data_storage/train_test"
 TEST_DATA_FILE = "test_data.csv"
 TRAIN_DATA_FILE = "train_data.csv"
+TEST_RATIO = 0.2
 
 RAW_DATA_LENGTH = 500
 
@@ -128,231 +132,277 @@ REGEX_RULE_LIST = [
         "name": "DMDMY",
         "pattern": r"(?<![\w\/\.])(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[-–—−]\s*(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
         "priority": 1,
+        "tag": "dmdmy"
     },
     {
         "name": "DDMY",
         "pattern": r"\b(?:(ngày|ngay)\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[-–—−]\s*(?:(ngày|ngay)\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})\b",
         "priority": 2,
+        "tag": "ddmy"
     },
     {
         "name": "DMDM",
         "pattern": r"(?<![\w\/\.])(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[-–—−]\s*(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])(?![\w\/])",
         "priority": 3,
+        "tag": "dmdm"
     },
     {
         "name": "DMYDMY",
         "pattern": r"(?<![\w\/\.])(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})\s*[-–—−]\s*(?:ngày|ngay\s?)?(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
         "priority": 4,
+        "tag": "dmydmy"
     },
     {
         "name": "MYMY",
         "pattern": r"(?<![\w\/\.])(?:tháng|thang)?\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})\s*[-–—−]\s*(?:tháng|thang)?\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
         "priority": 5,
+        "tag": "mymy"
     },
     {
         "name": "DMY",
         "pattern": r"(?<![\w\/\.])(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)?\s*(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
         "priority": 6,
+        "tag": "dmy"
     },
     {
         "name": "MMY",
         "pattern": r"(?<![\w\/\.])(?:tháng|thang)?\s*(0?[1-9]|1[0-2])\s*[-–—−]\s*(?:tháng|thang)?\s*(0?[1-9]|1[0-2])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
         "priority": 7,
+        "tag": "mmy"
     },
     {
         "name": "QQY",
         "pattern": r"(?<![\w\/\.])(?:quý|quy)\s*([0?[1-4]|I|II|III|IV])\s*[-–—−]\s*(?:quý|quy)?\s*([0?[1-4]|I|II|III|IV])\s*[\.\/]\s*([1-9][0-9]{2,3})(?![\w\/])",
         "priority": 8,
+        "tag": "qqy"
     },
     {
         "name": "DDM",
         "pattern": r"(?<![\w\/\.])(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)\s*(0?[1-9]|[12][0-9]|3[01])\s*[-–—−]\s*(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)?\s*(0?[1-9]|[12][0-9]|3[01])\s*[\.\/]\s*(0?[1-9]|1[0-2])(?![\w\/])",
         "priority": 9,
+        "tag": "ddm"
     },
     {
         "name": "QQ",
         "pattern": r"(?<![\w\/\.])(?:quý|quy)\s*([0?[1-4]|I|II|III|IV])\s*[-–—−]\s*(?:quý|quy)?\s*([0?[1-4]|I|II|III|IV])(?![\w\/])",
         "priority": 10,
+        "tag": "qq"
     },
     {
         "name": "DD",
         "pattern": r"(?<![\w\/\.])(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)\s*(0?[1-9]|[12][0-9]|3[01])\s*[-–—−]\s*(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)?\s*(0?[1-9]|[12][0-9]|3[01])(?![\w\/])",
         "priority": 11,
+        "tag": "dd"
     },
     {
         "name": "MM",
         "pattern": r"(?<![\w\/\.])(?:tháng|thang)\s*(0?[1-9]|1[0-2])\s*[-–—−]\s*(?:tháng|thang)?\s*(0?[1-9]|1[0-2])(?![\w\/])",
         "priority": 12,
+        "tag": "mm"
     },
     {
         "name": "YY",
         "pattern": r"(?<![\w\/\.])(?:năm|nam)\s*([0-9]{1,4})\s*[-–—−]\s*(?:năm|nam)?\s*([0-9]{1,4})(?![\w\/])",
         "priority": 13,
+        "tag": "yy"
     },
     {
         "name": "MY",
         "pattern": r"(?<![\w\/\.])(?:tháng|thang)\s*(0?[1-9]|1[0-2])\s*[\.\/\-]\s*([1-9][0-9]{2,3})(?![\w\/])",
         "priority": 14,
+        "tag": "my"
     },
     {
         "name": "DM",
         "pattern": r"(?<![\w\/\.])(?:ngày|ngay|sáng|sang|trưa|trua|chiều|chieu|tối|toi)\s*(0?[1-9]|[12][0-9]|3[01])\s*[\.\/\-]\s*(0?[1-9]|1[0-2])(?![\w\/])",
         "priority": 15,
+        "tag": "dm"
     },
     {
         "name": "QY",
         "pattern": r"(?<![\w\/\.])(?:quý|quy)\s*([0?[1-4]|I|II|III|IV])\s*[\.\/\-]\s*([1-9][0-9]{2,3})(?![\w\/])",
         "priority": 16,
+        "tag": "qy"
     },
     {  # dang thay do
         "name": "HMSHMS",
         "pattern": r"\b(\d{1,2})[hg:](\d{1,2})[mp':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?\s*[-–—−]\s*(\d{1,2})[hg:](\d{1,2})[mp':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?(?=\W|$)",
         "priority": 17,
+        "tag": "hmshms"
     },
     {
         "name": "HMHM",
         "pattern": r"\b(\d{1,2})[hg:](\d{1,2})(?:[p'\u2032m]?)\s*[-–—−]\s*(\d{1,2})[hg:](\d{1,2})(?:[p'\u2032m]?)(?=\W|$)",
         "priority": 18,
+        "tag": "hmhm"
     },
     {
         "name": "MSMS",
-        "pattern": r"\b(\d{1,2})[mp':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?\s*[-–—−]\s*(\d{1,2})[mp':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?(?=\W|$)",
+        "pattern": r"\b(\d{1,2})[p':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?\s*[-–—−]\s*(\d{1,2})[p':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?(?=\W|$)",
         "priority": 19,
+        "tag": "msms"
     },
     {
         "name": "HMS",
         "pattern": r"\b(\d{1,2})[hg:](\d{1,2})[mp':\u2032](\d{1,2})(?:''|'|s|\u2032\u2032|\u2032)?(?=\W|$)",
         "priority": 20,
+        "tag": "hms"
     },
     {
         "name": "HH",
         "pattern": r"\b(\d{1,2})\s*[hg]?\s*[-–—−]\s*(\d{1,2})\s*[hg]\b",
         "priority": 21,
+        "tag": "hh"
     },
     {
         "name": "T_MM",
         "pattern": r"\b(\d{1,2})\s*[p'\u2032]?\s*[-–—−]\s*(\d{1,2})\s*[p'\u2032](?=\W|$)",
         "priority": 22,
+        "tag": "t_mm"
     },
     {
         "name": "SS",
         "pattern": r"\b(\d{1,2})\s*(?:''|s|\u2032\u2032)?\s*[-–—−]\s*(\d{1,2})\s*(?:''|s|\u2032\u2032)(?=\W|$)",
         "priority": 23,
+        "tag": "ss"
     },
     {
         "name": "HM",
         "pattern": r"\b(\d{1,2})[hg](\d{1,2})[mp'\u2032]?(?=\W|$)",
         "priority": 24,
+        "tag": "hm"
     },
     {
         "name": "MS",
-        "pattern": r"\b(\d{1,2})[mp'\u2032](\d{1,2})(?:''|s|\u2032\u2032)?(?=\W|$)",
+        "pattern": r"\b(\d{1,2})[p'\u2032](\d{1,2})(?:''|s|\u2032\u2032)?(?=\W|$)",
         "priority": 25,
+        "tag": "ms"
     },
     {
         "name": "TEL1",
         "pattern": r"(?<!\w)(?:\(?\+?84\)?)[-. ]?((?:\d[ .]?){9,10})(?!\w)",
         "priority": 26,
+        "tag": "tel"
     },
     {
         "name": "TEL2",
         "pattern": r"(?<!\w)(\(?0\d{2}\)?)[-. ]?((?:\d[ .]?){8})(?!\w)",
         "priority": 27,
+        "tag": "tel"
     },
     {
         "name": "TEL3",
         "pattern": r"(?<!\w)0[-. ]?((?:\d[ .]?){9})(?!\w)",
         "priority": 28,
+        "tag": "tel"
     },
     {
         "name": "TEL4",
         "pattern": r"(?<!\w)1[8|9]00[-. ]?((?:\d[ .]?){4,6})(?!\w)",
         "priority": 29,
+        "tag": "tel"
     },
     {
         "name": "MATH_OPERATOR",
         "pattern": r"(?<![\w])((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))(?:\s?([\+\*x])\s?((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))){1,2}(?![\w])",
         "priority": 30,
+        "tag": "math_operator"
     },
     {
         "name": "CURRENCY_RANGE",
         "pattern": r"(?<![\w])(((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)?\s?[-–—−]\s?((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)|(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)\s?((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?[-–—−]\s?(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)?\s?((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0)))(?![\w])",
         "priority": 31,
+        "tag": "currency_range"
     },
     {
         "name": "CURRENCY",
         "pattern": r"(?<![\w])(((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)|(\$|€|¥|£|₫|chf|cad|aud|nzd|sgd|hkd|cny|usd|eur|jpy|gbp|krw|inr|vnd|vnđ|php)\s?((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0)))(?![\w])",
         "priority": 32,
+        "tag": "currency"
     },
     {
         "name": "HOUR_MEASURE",
         "pattern": r"(?<![\w])((?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?g(?![\w])",
         "priority": 33,
+        "tag": ""
     },
     {
         "name": "MEASURE_RANGE",
-        "pattern": r"(?<![\w])((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))(\s?\%)?\s?[-–—−]\s?((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(l\/100km|(?:km|cm|m|mg|mmol)\/(?:h|s|l|kg)|[khdcmμnp][gm]|m|in|J|kJ|cal|kcal|Wh|kWh|W|kW|MW|m2|m²|km2|km²|cm2|cm²|ft2|ft²|ha|L|mL|m³|m3|cm³|cm3|oz|°C|Hz|kHz|GHz|B|KB|MB|GB|TB|\%)(?![\w])",
+        "pattern": r"(?<![\w])((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(l\/100km|(?:km|cm|m|mg|mmol)\/(?:h|s|l|kg)|[khdcmμnp][gm]|m\d{0,5}|in|J|kJ|cal|kcal|Wh|kWh|W|kW|MW|m²|km2|km²|cm2|cm²|ft2|ft²|ha|L|mL|m³|cm³|cm3|oz|°C|Hz|kHz|GHz|B|KB|MB|GB|TB|\%)?\s?[-–—−]\s?((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(l\/100km|(?:km|cm|m|mg|mmol)\/(?:h|s|l|kg)|[khdcmμnp][gm]|m\d{0,5}|in|J|kJ|cal|kcal|Wh|kWh|W|kW|MW|m²|km2|km²|cm2|cm²|ft2|ft²|ha|L|mL|m³|cm³|cm3|oz|°C|Hz|kHz|GHz|B|KB|MB|GB|TB|\%)(?![\w])",
         "priority": 34,
+        "tag": "measure_range"
     },
     {
         "name": "MEASURE",
-        "pattern": r"(?<![\w])((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(l\/100km|(?:km|cm|m|mg|mmol)\/(?:h|s|l|kg)|[khdcmμnp][gm]|m|in|J|kJ|cal|kcal|Wh|kWh|W|kW|MW|m2|m²|km2|km²|cm2|cm²|ft2|ft²|ha|L|mL|m³|m3|cm³|cm3|oz|°C|Hz|kHz|GHz|B|KB|MB|GB|TB|\%)(?![\w])",
+        "pattern": r"(?<![\w])((?:\-|\+)?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5},\d+|\d+,\d+|[1-9][0-9]{0,2}(?:\.[0-9]{3}){1,5}|[1-9][0-9]{0,14}000|[1-9][0-9]{0,6}|0))\s?(l\/100km|(?:km|cm|m|mg|mmol)\/(?:h|s|l|kg)|[khdcmμnp][gm]|m\d{0,5}|in|J|kJ|cal|kcal|Wh|kWh|W|kW|MW|m²|km2|km²|cm2|cm²|ft2|ft²|ha|L|mL|m³|cm³|cm3|oz|°C|Hz|kHz|GHz|B|KB|MB|GB|TB|\%)(?![\w])",
         "priority": 35,
+        "tag": "measure"
     },
     {
         "name": "RANGE",
         "pattern": r"(?<!\w)((\d+,\d+)\s*[-–—−]\s*(\d+(?:,\d+)?)|(\d+(?:,\d+)?)\s*[-–—−]\s*(\d+,\d+))(?![\w\,])",
         "priority": 36,
+        "tag": "range"
     },
     {
         "name": "FRACTION",
         "pattern": r"(?<!\w)((\d+,\d+)\s*\/\s*(\d+(?:,\d+)?)|(\d+(?:,\d+)?)\s*\/\s*(\d+,\d+))(?![\w\,])",
         "priority": 37,
+        "tag": "fraction"
     },
     {
         "name": "NUM:NUM",
         "pattern": r"(?<![\w])((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6})):((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))(?![\w])",
         "priority": 38,
+        "tag": ""
     },
     {
         "name": "NUM-NUM",
         "pattern": r"(?<![\w])((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))\s*[-–—−]\s*((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))(?![\w])",
         "priority": 39,
+        "tag": ""
     },
     {
         "name": "NUM/NUM",
         "pattern": r"(?<![\w])((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))\s*/\s*((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))(?![\w])",
         "priority": 40,
+        "tag": ""
     },
     {
         "name": "NUM_INT1",
         "pattern": r"(?<![\d\.])((?:\\-|\\+)?(?:[1-9][0-9]{0,2}(?:[\.][0-9]{3}){1,5}))(?!\w)",
         "priority": 41,
+        "tag": "num_int1"
     },
     {
         "name": "NUM.NUM",
         "pattern": r"(?<![\w])((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))\.((?:\-|\+)?(?:[0-9][0-9]{0,2}(?:[\.][0-9]{3}){0,5}|[0-9][0-9]{0,14}[0]{3}|[0-9][0-9]{0,6}))(?![\w])",
         "priority": 42,
+        "tag": ""
     },
     {
         "name": "NUM_FLOAT",
         "pattern": r"(\d+,\d+)",
         "priority": 43,
+        "tag": "num_float"
     },
     {
         "name": "NUM_INT",
         "pattern": r"(?<![\d\.])((?:\\-|\\+)?(?:[1-9][0-9]{0,2}(?:[\\.][0-9]{3}){1,5}|[1-9][0-9]{0,14}[0]{3}|[1-9][0-9]{0,6}|0))",
         "priority": 44,
+        "tag": "num_int"
     },
     {
         "name": "ROMAN_RANGE",
         "pattern": r"(?<!\w)([IVX]{1,5})\s?[-–—−]\s?([IVX]{1,5})(?!\w)",
         "priority": 45,
+        "tag": "roman_range"
     },
     {
         "name": "ROMAN",
         "pattern": r"(?<!\w)(chương|phần|mục|bài|quyển|tập|điều|khoản|phụ lục|mục lục|số|thứ|lần|kỷ|kỉ|kì|kỳ|khóa)\s?([IVX]{1,5})(?!\w)",
         "priority": 46,
+        "tag": "roman"
     },
 ]
 
@@ -373,7 +423,7 @@ CONFUSED_NSW_DICT = {
             "tagged_sentence": "Lúc ~19h#HOUR, tôi đi chợ mua ~1.0000g#MEASURE muối"
             "tags": "HOUR, MEASURE"
         }
-        """
+        """,
     },
     "NUM:NUM": {
         "true_labels": """
@@ -397,7 +447,7 @@ CONFUSED_NSW_DICT = {
             "tagged_sentence": "Việt Nam thắng vào phút ~15:30#MS"
             "tags": "MS"
         }
-        """
+        """,
     },
     "NUM-NUM": {
         "true_labels": """
@@ -422,7 +472,7 @@ CONFUSED_NSW_DICT = {
             "tagged_sentence": "Từ ~8-2024#MY đến ~9-2024#MY, tôi đi công tác."
             "tags": "MY"
         }
-        """
+        """,
     },
     "NUM/NUM": {
         "true_labels": """
@@ -446,7 +496,7 @@ CONFUSED_NSW_DICT = {
             "tagged_sentence": "Từ ~8/2024#MY, anh ấy định cư ở Mỹ."
             "tags": "MY"
         }
-        """
+        """,
     },
     "NUM.NUM": {
         "true_labels": """
@@ -470,8 +520,8 @@ CONFUSED_NSW_DICT = {
             "tagged_sentence": "Từ ~10.2025#MY, mức phạt cho việc vượt đèn đỏ là ~10.5#NUM_FLOAT triệu."
             "tags": "MY, NUM_FLOAT"
         }
-        """
-    }
+        """,
+    },
 }
 
 NSW_TAG_PROMPT = """
