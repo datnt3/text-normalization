@@ -1,9 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
-
+core/model/saved/
 data_storage/
 *.txt
-
+*.tar.gz
 ### Python ###
 *.csv
 *.log
