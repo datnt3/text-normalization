@@ -9,6 +9,28 @@ data_storage/
 *.log
 *.log.*
 
+
+
+core/model/eval/unsloth_compiled_cache/
+core/model/unsloth_compiled_cache/
+unsloth_compiled_cache/
+
+# Unsloth or similar ML libs cache (adjust if you know exact folder names)
+.unsloth_cache/
+.unsloth_compiled_cache/
+.cache/
+cache/
+
+core/model/eval/unsloth_compiled_cache/
+
+# TorchScript / Torch compile cache
+torchscript_cache/
+*.ptc  # sometimes PyTorch compile cache files
+
+# Temporary files sometimes created by ML pipelines
+*.tmp
+*.temp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
