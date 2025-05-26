@@ -6,4 +6,4 @@ LOAD_IN_4BIT = False # Use 4bit quantization to reduce memory usage. Can be Fals
 INFER_SYS_PROMPT = "You are a phonetic Vietnamese specialist mastering in Text normalization task in Text To Speech. Convert each numerical non-standard word into its spoken phonetic Vietnamese form, integrating it back into the sentence."
 
 SAVED_EVAL_DIR = "data_storage/eval"
-SAVED_EVAL_FILE = "eval_{model_name}.csv"
+SAVED_EVAL_FILE = "eval.csv"

@@ -39,8 +39,9 @@ class Inference():
       load_in_4bit=LOAD_IN_4BIT
     )
     
-  def infer_all(self):
     FastLanguageModel.for_inference(self.model)
+    
+  def infer_all(self):
     results = []
 
     test_data = pd.read_csv(self.data_path)
@@ -102,12 +103,5 @@ class Inference():
     predicted_label = predicted_label.strip()
     
     return predicted_label
-  
-if __name__ == "__main__":
-  test_data_path = os.path.join(TRAIN_TEST_DATA_DIR, TEST_DATA_FILE)
-  model_name = MODEL_NAME
-  inference = Inference(data_path=test_data_path, model_name=model_name)
-
-  inference.infer_all()
   
     
