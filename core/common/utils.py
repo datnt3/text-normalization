@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 import os
 import json
@@ -40,11 +41,10 @@ def save_data_to_file(labeled_datas: Union[List, Dict], saved_dir: str, saved_fi
         if check_sentence(labeled_data["input"]):
             filtered_datas.append(labeled_data)
     
-    if not os.path.exists(saved_dir):
-        os.makedirs(saved_dir, exist_ok=True)
+    os.makedirs(os.path.join(saved_dir, datetime.now().strftime("%Y-%m-%d")), exist_ok=True)
 
     df = pd.DataFrame(filtered_datas)
-    saved_path = os.path.join(saved_dir, saved_file)
+    saved_path = os.path.join(saved_dir, datetime.now().strftime("%Y-%m-%d"), saved_file)
     file_exist = os.path.isfile(saved_path)
     df.to_csv(saved_path, mode='a', encoding='utf-8', index=False, header=not file_exist)
     

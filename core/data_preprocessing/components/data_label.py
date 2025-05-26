@@ -158,6 +158,14 @@ class DataLabel(object):
                     datas, saved_dir=LABELED_DATA_DIR, saved_file=NSW_TAGGED_DATA_FILE
                 )
                 datas.clear()
+        if datas:
+            saved_index = inputs.index(datas[-1]["input"])
+            save_checkpoints(
+                file, saved_index, DATA_CHECKPOINT_DIR, NSW_TAGGED_CHECKPOINT_FILE
+            )
+            filtered_datas = save_data_to_file(
+                datas, saved_dir=LABELED_DATA_DIR, saved_file=NSW_TAGGED_DATA_FILE
+            )
 
     def get_gpt_response(self, prompt):
         response = self.client.chat.completions.create(

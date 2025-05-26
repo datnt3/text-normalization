@@ -1,6 +1,9 @@
+import os
 import random
 import rootutils
 import pandas as pd
+from loguru import logger
+from datetime import datetime
 
 rootutils.setup_root(
     __file__,
@@ -9,6 +12,7 @@ rootutils.setup_root(
 )
 from core.common.utils import save_data_to_file
 from core.config.config import (
+    NSW_LIST,
     REGEX_RULE_LIST,
     TEST_DATA_FILE,
     TEST_RATIO,
@@ -17,6 +21,11 @@ from core.config.config import (
 )
 from core.data.dataset.dataset import TextNormDataset
 
+os.makedirs("logs", exist_ok=True)
+
+# Add log file
+logger.add("logs/train_test_split.log", level="INFO")
+
 
 class DataModule:
     def __init__(self, data_path: str):
@@ -24,6 +33,8 @@ class DataModule:
         self.setup()
 
     def train_test_data_split(self):
+        logger.info(f"🚀 Starting train-test split at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
         tags = []
         tagged_sentences = {}
         test_data = []
@@ -31,6 +42,7 @@ class DataModule:
         used_in_test_datas = []
         used_in_train_datas = []
 
+        #FIXME: tags bi sai, thieu cacs loai nhap nhang score, ratio..
         text_norm_dataset = self.text_norm_dataset.data
         # for row in text_norm_dataset["final_tags"]:
         #     if pd.isna(row):
@@ -39,17 +51,19 @@ class DataModule:
         #     for row_tag_value in row_tag_values:
         #         if not row_tag_value in tags:
         #             tags.append(row_tag_value)
-        for item in REGEX_RULE_LIST:
-            if item["tag"] != "":
-                tags.append(item["tag"])
-        tags = list(set(tags))
+        # for item in REGEX_RULE_LIST:
+        #     if item["tag"] != "":
+        #         tags.append(item["tag"])
+        # tags = list(set(tags))
+        
+        tags = NSW_LIST
 
         for index, row in text_norm_dataset.iterrows():
-            gpt_tags = row.get("final_tags")
-            if pd.isna(gpt_tags):
+            final_tags = row.get("final_tags")
+            if pd.isna(final_tags):
                 continue
             for tag in tags:
-                if tag in gpt_tags:
+                if tag in final_tags:
                     if not tag in tagged_sentences.keys():
                         tagged_sentences[tag] = []
                     tagged_sentences[tag].append(
@@ -61,6 +75,7 @@ class DataModule:
                             "gpt_tagged_sentence": row["gpt_tagged_sentence"],
                             "gpt_tags": row["gpt_tags"],
                             "final_tags": row["final_tags"],
+                            "test_tag": tag
                         }
                     )
 
@@ -82,16 +97,16 @@ class DataModule:
 
             if len(filtered_sentences) < 30:
                 number_test_samples = 0
-                print(f"{tag}: {len(filtered_sentences)}")
+                logger.info(f"{tag}: {len(filtered_sentences)}")
                 continue
             if len(filtered_sentences) > 30 and len(filtered_sentences) < 300:
                 number_test_samples = int(TEST_RATIO * len(filtered_sentences))
-                print(
+                logger.info(
                     f"{tag}: {len(filtered_sentences)} filtered_sentences, test samples: {number_test_samples}"
                 )
             else:
                 number_test_samples = 50
-                print(
+                logger.info(
                     f"{tag}: {len(filtered_sentences)} filtered_sentences, test samples: {number_test_samples}"
                 )
 
@@ -111,5 +126,5 @@ class DataModule:
 
 
 if __name__ == "__main__":
-    data_module = DataModule("data_storage/processed/retagged_data_cleaned.csv")
+    data_module = DataModule("data_storage/processed/retagged_data_cleaned_v4.csv")
     data_module.train_test_data_split()
