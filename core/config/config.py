@@ -19,7 +19,7 @@ NSW_TAGGED_DATA_FILE = "retagged_data.csv"
 WRONG_TAGS_DATA_FILE = "wrong_tags_data.csv"
 TRUE_TAGS_DATA_FILE = "true_tags_data.csv"
 
-TRAIN_DATA_DIR = "vn-text-norm-300k"
+TRAIN_DATA_DIR = "vn-text-norm-300k-v2"
 RAW_DATA_DIR = "data_storage/raw"
 
 TRAIN_TEST_DATA_DIR = "data_storage/train_test"
@@ -115,7 +115,7 @@ The output must be structured in JSON format, with each element containing the f
   }
   {
     "input": "Kỉ niệm thành lập công ty lần thứ IV, lương của tôi được tăng từ 1.000.000-2.000.000 VNĐ.",
-    "s_output": "Kỉ niệm thành lập công ty lần thứ bốn, lương của tôi được tăng từ một triệu đến hai triệu VNĐ."
+    "s_output": "Kỉ niệm thành lập công ty lần thứ bốn, lương của tôi được tăng từ một triệu đến hai triệu việt nam đồng."
   }
   
   
@@ -125,6 +125,50 @@ The output must be structured in JSON format, with each element containing the f
   - Remember to handle edge cases, such as multiple NSW in a single sentence or different formats of dates and times.
   - Ensure that all transformations are accurate with the most natural and proper manner in Vietnamese. Consider the context in which the numerical non-standard words are used and maintain the coherence of the paragraph while making the transformations.
 """
+
+NSW_LIST = [
+    "dmdmy",
+    "ddmy",
+    "dmdm",
+    "dmydmy",
+    "mymy",
+    "dmy",
+    "mmy",
+    "qqy",
+    "ddm",
+    "qq",
+    "dd",
+    "mm",
+    "yy",
+    "my",
+    "dm",
+    "qy",
+    "hmshms",
+    "hmhm",
+    "msms",
+    "hms",
+    "hh",
+    "t_mm",
+    "ss",
+    "hm",
+    "ms",
+    "hour",
+    "tel",
+    "math_operator",
+    "currency_range",
+    "currency",
+    "measure_range",
+    "measure",
+    "num_int",
+    "num_int1",
+    "num_float",
+    "range",
+    "roman",
+    "roman_range",
+    "score",
+    "fraction",
+    "ratio"
+]
 
 # FIXME: Add rule to match confusing types: measure, currency, roman
 REGEX_RULE_LIST = [

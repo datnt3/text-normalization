@@ -21,7 +21,6 @@ unsloth_compiled_cache/
 .cache/
 cache/
 
-core/model/eval/unsloth_compiled_cache/
 
 # TorchScript / Torch compile cache
 torchscript_cache/

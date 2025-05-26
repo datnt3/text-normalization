@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import pandas as pd
 import rootutils
@@ -29,10 +30,10 @@ class DataPreprocessing():
         
         df["conversation"] = conversations
         dataset = Dataset.from_pandas(df=df)
-        train_data_path = os.path.join(LABELED_DATA_DIR, TRAIN_DATA_DIR)
+        train_data_path = os.path.join(LABELED_DATA_DIR, datetime.now().strftime("%Y-%m-%d"), TRAIN_DATA_DIR)
         os.makedirs(train_data_path, exist_ok=True)
         dataset.save_to_disk(dataset_path=train_data_path)
         
 if __name__=="__main__":
-    data_preprocessing = DataPreprocessing("/Users/datnt/Desktop/code/text-normalization/data_storage/train_test/train_data.csv")
+    data_preprocessing = DataPreprocessing("/data/datnt3/text-normalization/data_storage/train_test/2025-05-25/train_data.csv")
     data_preprocessing.format_data()
