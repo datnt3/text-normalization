@@ -9,19 +9,6 @@ rootutils.setup_root(
 )
 
 from core.config.config import REGEX_RULE_LIST
-# REGEX_RULE_LIST = [
-#         {
-#         "name": "MY",
-#         "pattern": r"(?<![\w\/\.])(?:tháng|thang)\s*(0?[1-9]|1[0-2])\s*[\.\/\-]\s*([1-9][0-9]{2,3})\b",
-#         "priority": 14,
-#     },
-#         {
-#         "name": "NUM_INT",
-#         "pattern": r"(?<![\d\.])((?:\\-|\\+)?(?:[1-9][0-9]{0,2}(?:[\\.][0-9]{3}){0,5}|[1-9][0-9]{0,14}[0]{3}|[1-9][0-9]{0,6}|0))",
-#         "priority": 36,
-#     },
-# ]
-
 
 class RegexRule:
     def __init__(self, name: str, pattern: str, priority: int):
@@ -31,7 +18,7 @@ class RegexRule:
 
 
 class Rule:
-    def __init__(self, rules: List):
+    def __init__(self, rules: List):                                                    
         self.rules = []
         for rule in rules:
             regex_rule = RegexRule(
@@ -77,7 +64,12 @@ class Rule:
             tagged_sentence = tagged_sentence[:start] + tagged_text + tagged_sentence[end:]
         
         return tagged_sentence, tags
-
+    
+    def get_all_matches(self, sentence: str):
+        pattern = r'~(.*?)#(currency_range|math_operator|measure_range|hour_measure|roman_range|num_float|currency|num_int1|fraction|measure|num_int|num/num|num-num|num\.num|num\:num|dmydmy|hmshms|dmdmy|range|roman|score|ratio|ddmy|dmdm|mymy|hmhm|msms|t_mm|hour|dmy|mmy|qqy|ddm|hms|tel|qq|dd|mm|yy|my|dm|qy|hh|ss|hm|ms)'
+        matches = re.finditer(pattern, sentence)
+        
+        return [match for match in matches]
     
 
 if __name__ == "__main__":
