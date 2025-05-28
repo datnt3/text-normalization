@@ -9,19 +9,6 @@ rootutils.setup_root(
 )
 
 from core.config.config import REGEX_RULE_LIST
-# REGEX_RULE_LIST = [
-#         {
-#         "name": "MY",
-#         "pattern": r"(?<![\w\/\.])(?:tháng|thang)\s*(0?[1-9]|1[0-2])\s*[\.\/\-]\s*([1-9][0-9]{2,3})\b",
-#         "priority": 14,
-#     },
-#         {
-#         "name": "NUM_INT",
-#         "pattern": r"(?<![\d\.])((?:\\-|\\+)?(?:[1-9][0-9]{0,2}(?:[\\.][0-9]{3}){0,5}|[1-9][0-9]{0,14}[0]{3}|[1-9][0-9]{0,6}|0))",
-#         "priority": 36,
-#     },
-# ]
-
 
 class RegexRule:
     def __init__(self, name: str, pattern: str, priority: int):
@@ -31,7 +18,7 @@ class RegexRule:
 
 
 class Rule:
-    def __init__(self, rules: List):
+    def __init__(self, rules: List):                                                    
         self.rules = []
         for rule in rules:
             regex_rule = RegexRule(

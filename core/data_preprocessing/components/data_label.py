@@ -35,7 +35,7 @@ import os
 import json
 import re
 
-from core.data_preprocessing.components.nsw_tag.base_rule import Rule
+from core.n2w_handler.nsw_tag.base_rule import Rule
 
 logging.config.fileConfig(LOGGING_CONFIG_FILE)
 logger = logging.getLogger()
