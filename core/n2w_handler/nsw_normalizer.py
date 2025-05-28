@@ -1,11 +1,14 @@
 from core.n2w_handler.converter.date import DateConverter
+from core.n2w_handler.converter.time import TimeConverter
+from core.n2w_handler.converter.tel import TelConverter
+
 
 
 class NSWNormalizer():
   def __init__(self):
     self.registry = {}
 
-    date_types = [
+    date_categories = [
       "dmdmy",
       "ddmy",
       "dmdm",
@@ -24,7 +27,7 @@ class NSWNormalizer():
       "qy",
     ]
     
-    time_types = [
+    time_categories = [
       "hmshms",
       "hmhm",
       "msms",
@@ -37,20 +40,23 @@ class NSWNormalizer():
       "hour",
     ]
     
-    tel_types = [
+    tel_categories = [
       "tel"
     ]
     
     converters = [
-      (date_types, DateConverter())
+      (date_categories, DateConverter()),
+      (time_categories, TimeConverter()),
+      (tel_categories, TelConverter()),
     ]
     
-    for type, converter in converters:
-      self.registry[type] = DateConverter()
+    for categories, converter in converters:
+      for category in categories:
+        self.registry[category] = converter
       
-  def convert(self, type: str, value: str):
-    converter = self.registry.get(type)
+  def convert(self, category: str, value: str):
+    converter = self.registry.get(category)
     if converter:
-      spoken_word = converter.convert(type=type, value=value)
+      spoken_word = converter.convert(category=category, value=value)
       return spoken_word
     return value

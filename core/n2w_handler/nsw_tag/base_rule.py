@@ -64,7 +64,12 @@ class Rule:
             tagged_sentence = tagged_sentence[:start] + tagged_text + tagged_sentence[end:]
         
         return tagged_sentence, tags
-
+    
+    def get_all_matches(self, sentence: str):
+        pattern = r'~(.*?)#(currency_range|math_operator|measure_range|hour_measure|roman_range|num_float|currency|num_int1|fraction|measure|num_int|num/num|num-num|num\.num|num\:num|dmydmy|hmshms|dmdmy|range|roman|score|ratio|ddmy|dmdm|mymy|hmhm|msms|t_mm|hour|dmy|mmy|qqy|ddm|hms|tel|qq|dd|mm|yy|my|dm|qy|hh|ss|hm|ms)'
+        matches = re.finditer(pattern, sentence)
+        
+        return [match for match in matches]
     
 
 if __name__ == "__main__":

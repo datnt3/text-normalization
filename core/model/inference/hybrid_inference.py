@@ -26,7 +26,8 @@ from core.config.config import (
     TEST_DATA_FILE
 )
 
-class Inference(BaseInference):
+
+class HybirdInference(BaseInference):
   def __init__(self, data_path: str, model_name: str):
     self.data_path = data_path
     self.model_name = model_name
@@ -41,6 +42,8 @@ class Inference(BaseInference):
     )
     
     FastLanguageModel.for_inference(self.model)
+    
+  
     
   def infer_all(self):
     results = []
@@ -104,5 +107,3 @@ class Inference(BaseInference):
     predicted_label = predicted_label.strip()
     
     return predicted_label
-  
-    
