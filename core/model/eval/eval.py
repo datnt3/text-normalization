@@ -9,29 +9,40 @@ rootutils.setup_root(
 )
 
 from core.model.inference.inference import Inference
+from core.model.inference.hybrid_inference import HybirdInference
 from core.common.utils import save_data_to_file
 from core.config.model_config import (
     SAVED_EVAL_DIR,
     SAVED_EVAL_FILE,
 )
+from core.config.regex_config import (
+    CORRECT_SPELLING_DICT,
+    INFERENCE_REGEX_RULES
+)
  
 
 
 class Eval():
-  def __init__(self, file_path: str, model_name: str):
+  def __init__(self, file_path: str, model_name: str, metric_name: str, inference_mode: str):
     self.file_path = file_path
     self.model_name = model_name
-    self.inference = Inference(data_path=self.file_path, model_name=self.model_name)
+    self.get_metric(metric_name=metric_name)
+    self.get_inference_mode(inference_mode=inference_mode)
     
-  def get_metric(self, metric_name: str = "exact_match"):
+  def get_metric(self, metric_name: str):
     if metric_name=="exact_match":
       self.metric = load("exact_match")
       self.regexes_to_ignore = [" không trăm"]
-    
+    if metric_name=="bleu":
+      pass
+      
+  def get_inference_mode(self, inference_mode: str):
+    if inference_mode == "llm_inference":
+      self.inference = Inference(data_path=self.file_path, model_name=self.model_name)
+    elif inference_mode == "hybrid_inference":
+      self.inference = HybirdInference(data_path=self.file_path, model_name=self.model_name, rules=INFERENCE_REGEX_RULES, correct_spelling_dict=CORRECT_SPELLING_DICT)
   
-  def evaluate(self, metric_name: str = "exact_match"):
-    self.get_metric(metric_name=metric_name)
-    
+  def evaluate(self):
     results = []
     test_data = pd.read_csv(self.file_path)
     for _,row in test_data.iterrows():
@@ -69,7 +80,10 @@ class Eval():
        save_data_to_file(results, SAVED_EVAL_DIR, SAVED_EVAL_FILE)
     
 if __name__=="__main__":
-  eval = Eval(file_path="/data/datnt3/text-normalization/data_storage/train_test/2025-05-25/eval_test_data.csv", model_name="/data/datnt3/text-normalization/core/model/saved/lora/2025-05-26/vn-llama3.2-1b-finetuned-300k")
+  file_path="/data/datnt3/text-normalization/data_storage/train_test/2025-05-29/test_data.csv"
+  model_name="/data/datnt3/text-normalization/core/model/saved/lora/2025-05-26/vn-llama3.2-1b-finetuned-300k"
+  
+  eval = Eval(file_path=file_path, model_name=model_name, metric_name="exact_match", inference_mode="hybrid_inference")
   eval.evaluate()
 
   

@@ -8,10 +8,10 @@ from core.n2w_handler.converter.base import BaseNSWConverter
 class TelConverter(BaseNSWConverter):
     def convert(self, category: str, value: str) -> str:
         if category == "tel":
-            return self.tel_convert(value=value)
+            return self.tel_convert(value)
         return value
 
-    def tel_convert(value: str) -> str:
+    def tel_convert(self, value: str) -> str:
         value = value.strip()
         value = value.replace("(", "").replace(")", "")
         
