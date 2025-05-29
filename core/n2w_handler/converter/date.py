@@ -206,16 +206,98 @@ class DateConverter(BaseNSWConverter):
     return " đến ".join(spoken_words)
   
   def dmy_convert(self, value: str) -> str:
-    pass
-  
+    value = value.strip()
+    prefix_match = re.match(r"^(ngày|sáng|trưa|chiều|tối)\s*", value)
+    prefix = ""
+    if prefix_match:
+        prefix = prefix_match.group(1) + " "
+        value_part = value[prefix_match.end():]  
+        day, month, year = re.split(r"[\.\/]", value_part)
+        if prefix == "ngày ":
+          return f"{prefix}{num_to_words(day)} tháng {num_to_words(month)} năm {num_to_words(year)}"
+        else:
+          return f"{prefix}ngày {num_to_words(day)} tháng {num_to_words(month)} năm {num_to_words(year)}"
+    else:
+        value_part = value
+        day, month, year = re.split(r"[\.\/]", value_part)
+        return f"ngày {num_to_words(day)} tháng {num_to_words(month)} năm {num_to_words(year)}"
+
   def mmy_convert(self, value: str) -> str:
-    pass
+    spoken_words = []
+
+    value = value.strip()
+    parts = re.split(r"[-–—−]", value)
+    if len(parts) != 2:
+      print("Wrong format")
+      return value
+
+    for i in range(len(parts)):
+      parts[i] = parts[i].strip()
+      prefix_match = re.match(r"^(tháng)\s*", parts[i])
+      prefix = ""
+      if i == 0:
+        if prefix_match:
+            prefix = prefix_match.group(1) + " "
+            value_part = parts[i][prefix_match.end():]  
+            month = value_part 
+            spoken_words.append(f"{prefix}{num_to_words(month)}")
+        else:
+            value_part = parts[i]
+            month = value_part
+            spoken_words.append(f"tháng {num_to_words(month)}")
+      else:
+        if prefix_match:
+            prefix = prefix_match.group(1) + " "
+            value_part = parts[i][prefix_match.end():]  
+            month, year = re.split(r"[\.\/]", value_part)
+            spoken_words.append(f"{prefix}{num_to_words(month)} năm {num_to_words(year)}")
+        else:
+            value_part = parts[i]
+            month, year = re.split(r"[\.\/]", value_part)
+            spoken_words.append(f"tháng {num_to_words(month)} năm {num_to_words(year)}")
+    
+    return " đến ".join(spoken_words)
   
   def qqy_convert(self, value: str) -> str:
     pass
   
   def ddm_convert(self, value: str) -> str:
-    pass
+    spoken_words = []
+
+    value = value.strip()
+    parts = re.split(r"[-–—−]", value)
+    if len(parts) != 2:
+      print("Wrong format")
+      return value
+
+    for i in range(len(parts)):
+      parts[i] = parts[i].strip()
+      prefix_match = re.match(r"^(ngày|sáng|trưa|chiều|tối)\s*", parts[i])
+      prefix = ""
+      if i == 0:
+        if prefix_match:
+            prefix = prefix_match.group(1) + " "
+            value_part = parts[i][prefix_match.end():]  
+            day = value_part 
+            if prefix == "ngày ":
+                spoken_words.append(f"{prefix}{num_to_words(day)}")
+            else:
+                spoken_words.append(f"{prefix}ngày {num_to_words(day)}")
+      else:
+        if prefix_match:
+            prefix = prefix_match.group(1) + " "
+            value_part = parts[i][prefix_match.end():]  
+            day, month = re.split(r"[\.\/]", value_part)
+            if prefix == "ngày ":
+                spoken_words.append(f"{prefix}{num_to_words(day)} tháng {num_to_words(month)}")
+            else:
+                spoken_words.append(f"{prefix}ngày {num_to_words(day)} tháng {num_to_words(month)}")
+        else:
+            value_part = parts[i]
+            day, month = re.split(r"[\.\/]", value_part)
+            spoken_words.append(f"ngày {num_to_words(day)} tháng {num_to_words(month)}")
+    
+    return " đến ".join(spoken_words)
   
   def qq_convert(self, value: str) -> str:
     pass
@@ -233,6 +315,7 @@ class DateConverter(BaseNSWConverter):
     pass
   
   def dm_convert(self, value: str) -> str:
+    
     pass
   
   def qy_convert(self, value: str) -> str:
