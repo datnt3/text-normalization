@@ -86,6 +86,7 @@ class HybirdInference(BaseInference):
   def infer_one(self, input: str) -> str:
     processed_text = self.preprocessor.preprocess(raw_text=input)
     if not re.search(r"\d", processed_text):
+      processed_text = self.postprocessor.postprocess(text=processed_text)
       return processed_text
     
     messages = [

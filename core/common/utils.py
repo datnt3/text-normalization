@@ -4,6 +4,7 @@ import os
 import json
 from typing import Dict, List, Union
 import pandas as pd
+from datasets import Dataset
 
 from core.config.config import CONFUSED_NSW_DICT, NSW_TAG_PROMPT
 
@@ -50,6 +51,12 @@ def save_data_to_file(labeled_datas: Union[List, Dict], saved_dir: str, saved_fi
     
     return filtered_datas
 
+def save_dataset(df: pd.DataFrame, saved_dir: str, dataset_name: str) -> None:
+    dataset = Dataset.from_pandas(df)
+    dataset_path = os.path.join(saved_dir, datetime.now().strftime("%Y-%m-%d"), dataset_name)   
+    os.makedirs(dataset_path, exist_ok=True)
+    dataset.save_to_disk(dataset_path=dataset_path)
+
 def format_prompt(input: str, category: str):
     formatted_prompt = NSW_TAG_PROMPT.format(
         category = category,
@@ -59,4 +66,14 @@ def format_prompt(input: str, category: str):
     prompt = f"{formatted_prompt}\nInput:\n{input}\nOutput:"
 
     return prompt
+
+def contains_arabic_number(word: str) -> bool:
+    return bool(re.search(r'\d', word))
+
+def contains_roman_number(word: str) -> bool:
+    roman_numeral_pattern = re.compile(
+        r"(?<!\w)([ivx]{1,5})(?!\w)",
+        re.IGNORECASE
+    )
+    return bool(roman_numeral_pattern.fullmatch(word))
 
