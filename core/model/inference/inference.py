@@ -1,3 +1,4 @@
+import unsloth
 from unsloth import FastLanguageModel
 from transformers import TextStreamer, TextIteratorStreamer
 import pandas as pd
