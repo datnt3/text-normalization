@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from evaluate import load
 
@@ -26,6 +27,7 @@ class Eval():
   def __init__(self, file_path: str, model_name: str, metric_name: str, inference_mode: str):
     self.file_path = file_path
     self.model_name = model_name
+    self.inference_mode = inference_mode
     self.get_metric(metric_name=metric_name)
     self.get_inference_mode(inference_mode=inference_mode)
     
@@ -53,7 +55,7 @@ class Eval():
       final_tags = row["final_tags"]
       test_tag = row["test_tag"]
       
-      for i in range(10):
+      for i in range(1):
         predicted_label = self.inference.infer_one(input=input)
         result = self.metric.compute(predictions=[predicted_label], references=[label], ignore_case=True, ignore_punctuation=True, regexes_to_ignore = self.regexes_to_ignore)
         exact_match_score = int(result["exact_match"])
@@ -74,16 +76,19 @@ class Eval():
         )
       
       if len(results) == 10:
-        save_data_to_file(results, SAVED_EVAL_DIR, SAVED_EVAL_FILE)
+        model_name_path = f"{self.model_name.split('/')[-2]}_{self.model_name.split('/')[-1]}"
+        saved_eval_file = f"{model_name_path}_{SAVED_EVAL_FILE}"
+        save_eval_dir = os.path.join(SAVED_EVAL_DIR, self.inference_mode)
+        save_data_to_file(results, save_eval_dir, saved_eval_file)
         results.clear()
     if results:
-       save_data_to_file(results, SAVED_EVAL_DIR, SAVED_EVAL_FILE)
+       save_data_to_file(results, SAVED_EVAL_DIR, saved_eval_file)
     
 if __name__=="__main__":
-  file_path="/data/datnt3/text-normalization/data_storage/train_test/2025-05-29/test_data.csv"
+  file_path="/data/datnt3/text-normalization/data_storage/train_test/2025-06-03/test_data_main.csv"
   model_name="/data/datnt3/text-normalization/core/model/saved/lora/2025-05-26/vn-llama3.2-1b-finetuned-300k"
   
-  eval = Eval(file_path=file_path, model_name=model_name, metric_name="exact_match", inference_mode="hybrid_inference")
+  eval = Eval(file_path=file_path, model_name=model_name, metric_name="exact_match", inference_mode="llm_inference")
   eval.evaluate()
 
   
