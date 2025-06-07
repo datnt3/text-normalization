@@ -11,6 +11,7 @@ rootutils.setup_root(
 
 from core.model.inference.inference import Inference
 from core.model.inference.hybrid_inference import HybirdInference
+from core.model.inference.multi_model import MultiModelInference
 from core.common.utils import save_data_to_file
 from core.config.model_config import (
     SAVED_EVAL_DIR,
@@ -40,13 +41,17 @@ class Eval():
       
   def get_inference_mode(self, inference_mode: str):
     if inference_mode == "llm_inference":
-      self.inference = Inference(data_path=self.file_path, model_name=self.model_name)
+      self.inference = Inference(data_path=self.file_path, model_name=self.model_name, correct_spelling_dict=CORRECT_SPELLING_DICT)
     elif inference_mode == "hybrid_inference":
       self.inference = HybirdInference(data_path=self.file_path, model_name=self.model_name, rules=INFERENCE_REGEX_RULES, correct_spelling_dict=CORRECT_SPELLING_DICT)
-  
+    elif inference_mode == "multimodel_inference":
+      print("Multimodel_inference running")
+      self.inference = MultiModelInference(data_path=self.file_path, model_name=self.model_name)
+    
   def evaluate(self):
     results = []
     test_data = pd.read_csv(self.file_path)
+    MAX_ENTRIES = 1
     for _,row in test_data.iterrows():
       input = row["input"]
       label = row["s_output"]
@@ -55,7 +60,7 @@ class Eval():
       final_tags = row["final_tags"]
       test_tag = row["test_tag"]
       
-      for i in range(1):
+      for i in range(MAX_ENTRIES):
         predicted_label = self.inference.infer_one(input=input)
         result = self.metric.compute(predictions=[predicted_label], references=[label], ignore_case=True, ignore_punctuation=True, regexes_to_ignore = self.regexes_to_ignore)
         exact_match_score = int(result["exact_match"])
@@ -76,19 +81,23 @@ class Eval():
         )
       
       if len(results) == 10:
-        model_name_path = f"{self.model_name.split('/')[-2]}_{self.model_name.split('/')[-1]}"
+        model_name_path = f"{self.model_name[-1].split('/')[-2]}_{self.model_name[-1].split('/')[-1]}"
         saved_eval_file = f"{model_name_path}_{SAVED_EVAL_FILE}"
         save_eval_dir = os.path.join(SAVED_EVAL_DIR, self.inference_mode)
         save_data_to_file(results, save_eval_dir, saved_eval_file)
         results.clear()
     if results:
-       save_data_to_file(results, SAVED_EVAL_DIR, saved_eval_file)
+       save_data_to_file(results, save_eval_dir, saved_eval_file)
+  
+  
     
 if __name__=="__main__":
-  file_path="/data/datnt3/text-normalization/data_storage/train_test/2025-06-03/test_data_main.csv"
-  model_name="/data/datnt3/text-normalization/core/model/saved/lora/2025-05-26/vn-llama3.2-1b-finetuned-300k"
+  file_path="/data/datnt3/text-normalization/data_storage/train_test/2025-05-25/test_data_main.csv"
+  # model_name="/data/datnt3/text-normalization/core/model/saved/lora/2025-06-06/content/vn-llama3.2-3b-finetuned-300k-16k-20steps"
+  model_name = ["/data/datnt3/text-normalization/core/model/saved/lora/2025-05-26/vn-llama3.2-3b-finetuned-300k",
+                "/data/datnt3/text-normalization/core/model/saved/lora/2025-06-06/vn-llama3.2-3b-finetuned-300k-16k-30step/vn-llama3.2-3b-finetuned-300k-16k-30step"]
   
-  eval = Eval(file_path=file_path, model_name=model_name, metric_name="exact_match", inference_mode="llm_inference")
+  eval = Eval(file_path=file_path, model_name=model_name, metric_name="exact_match", inference_mode="multimodel_inference")
   eval.evaluate()
 
   
