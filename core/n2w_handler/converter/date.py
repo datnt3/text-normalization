@@ -245,14 +245,14 @@ class DateConverter(BaseNSWConverter):
         if prefix_match:
             prefix = prefix_match.group(1) + " "
             value_part = value[prefix_match.end() :]
-            day, month, year = re.split(r"[\.\/]", value_part)
+            day, month, year = re.split(r"[\.\/\-]", value_part)
             if prefix == "ngày ":
                 return f"{prefix}{num_to_words(day)} tháng {num_to_words(month)} năm {num_to_words(year)}"
             else:
                 return f"{prefix}ngày {num_to_words(day)} tháng {num_to_words(month)} năm {num_to_words(year)}"
         else:
             value_part = value
-            day, month, year = re.split(r"[\.\/]", value_part)
+            day, month, year = re.split(r"[\.\/\-]", value_part)
             return f"ngày {num_to_words(day)} tháng {num_to_words(month)} năm {num_to_words(year)}"
 
     def mmy_convert(self, value: str) -> str:
@@ -349,7 +349,29 @@ class DateConverter(BaseNSWConverter):
         pass
 
     def mm_convert(self, value: str) -> str:
-        pass
+        spoken_words = []
+
+        value = value.strip()
+        parts = re.split(r"[-–—−]", value)
+        if len(parts) != 2:
+            print("Wrong format")
+            return value
+
+        for i in range(len(parts)):
+            parts[i] = parts[i].strip() 
+            prefix_match = re.match(r"^(tháng)\s*", parts[i])
+            prefix = ""
+            if prefix_match:
+                prefix = prefix_match.group(1) + " "
+                value_part = parts[i][prefix_match.end() :]
+                month = value_part
+                spoken_words.append(f"{prefix}{num_to_words(month)}")
+            else:
+                value_part = parts[i]
+                month = value_part
+                spoken_words.append(f"tháng {num_to_words(month)}")
+
+        return " đến ".join(spoken_words)
 
     def yy_convert(self, value: str) -> str:
         spoken_words = []
@@ -377,11 +399,29 @@ class DateConverter(BaseNSWConverter):
         return " đến ".join(spoken_words)
 
     def my_convert(self, value: str) -> str:
-        pass
+        value = value.strip()
+        prefix_match = re.match(r"^(tháng)\s*", value)
+        prefix = ""
+        if prefix_match:
+            prefix = prefix_match.group(1) + " "
+            value_part = value[prefix_match.end() :]
+            month, year = re.split(r"[\.\/\-]", value_part)
+            return f"{prefix}{num_to_words(month)} năm {num_to_words(year)}"
 
     def dm_convert(self, value: str) -> str:
+        value = value.strip()
+        prefix_match = re.match(r"^(ngày|sáng|trưa|chiều|tối)\s*", value)
+        prefix = ""        
 
-        pass
+        if prefix_match:
+            if prefix_match.group(1) == "ngày":
+                prefix = "ngày "
+            else:
+                prefix = prefix_match.group(1) + " ngày "
+            
+            value_part = value[prefix_match.end() :]
+            day, month = re.split(r"[\.\/\-]", value_part)
+            return f"{prefix}{num_to_words(day)} tháng {num_to_words(month)}"
 
     def qy_convert(self, value: str) -> str:
         value = value.strip()

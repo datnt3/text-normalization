@@ -35,7 +35,7 @@ class Eval():
   def get_metric(self, metric_name: str):
     if metric_name=="exact_match":
       self.metric = load("exact_match")
-      self.regexes_to_ignore = [" không trăm"]
+      self.regexes_to_ignore = [" không trăm", " từ"]
     if metric_name=="bleu":
       pass
       
@@ -81,8 +81,8 @@ class Eval():
         )
       
       if len(results) == 10:
-        model_name_path = f"{self.model_name[-1].split('/')[-2]}_{self.model_name[-1].split('/')[-1]}"
-        saved_eval_file = f"{model_name_path}_{SAVED_EVAL_FILE}"
+        model_name_path = f"{self.model_name.split('/')[-2]}_{self.model_name.split('/')[-1]}"
+        saved_eval_file = f"{model_name_path}_{MAX_ENTRIES}_{SAVED_EVAL_FILE}"
         save_eval_dir = os.path.join(SAVED_EVAL_DIR, self.inference_mode)
         save_data_to_file(results, save_eval_dir, saved_eval_file)
         results.clear()
@@ -93,11 +93,11 @@ class Eval():
     
 if __name__=="__main__":
   file_path="/data/datnt3/text-normalization/data_storage/train_test/2025-05-25/test_data_main.csv"
-  # model_name="/data/datnt3/text-normalization/core/model/saved/lora/2025-06-06/content/vn-llama3.2-3b-finetuned-300k-16k-20steps"
-  model_name = ["/data/datnt3/text-normalization/core/model/saved/lora/2025-05-26/vn-llama3.2-3b-finetuned-300k",
-                "/data/datnt3/text-normalization/core/model/saved/lora/2025-06-06/vn-llama3.2-3b-finetuned-300k-16k-30step/vn-llama3.2-3b-finetuned-300k-16k-30step"]
+  model_name="/data/datnt3/text-normalization/core/model/saved/lora/2025-06-07/vn-llama3.2-3b-augmented-2025-06-07"
+  # model_name = ["/data/datnt3/text-normalization/core/model/saved/lora/2025-05-26/vn-llama3.2-3b-finetuned-300k",
+  #               "/data/datnt3/text-normalization/core/model/saved/lora/2025-06-06/vn-llama3.2-3b-finetuned-300k-16k-30step/vn-llama3.2-3b-finetuned-300k-16k-30step"]
   
-  eval = Eval(file_path=file_path, model_name=model_name, metric_name="exact_match", inference_mode="multimodel_inference")
+  eval = Eval(file_path=file_path, model_name=model_name, metric_name="exact_match", inference_mode="hybrid_inference")
   eval.evaluate()
 
   

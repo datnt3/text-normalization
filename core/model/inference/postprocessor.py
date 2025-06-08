@@ -15,8 +15,9 @@ class PostProcessor():
         pass
       
     def correct_spelling(self, text: str) -> str:
-        for wrong_word, correct_word in self.correct_spelling_dict.items():
-            text = text.replace(wrong_word, correct_word)
+        for correct_word, wrong_words in self.correct_spelling_dict.items():
+            for wrong_word in wrong_words:
+                text = text.replace(wrong_word, correct_word)
         text = text.replace("  ", " ").strip()
         return text
 
