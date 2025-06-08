@@ -1,11 +1,15 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+model_name = "unsloth/Qwen2.5-3B-Instruct"
+saved_path = "./core/model/saved//base/Qwen2.5-3B-Instruct"
+
+
 # Load model and tokenizer from Hugging Face Hub
-model = AutoModelForCausalLM.from_pretrained("unsloth/Llama-3.2-1B-Instruct")
-tokenizer = AutoTokenizer.from_pretrained("unsloth/Llama-3.2-1B-Instruct")
+model = AutoModelForCausalLM.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 # Save them locally
-model.save_pretrained("./core/model/base/llama-3.2-1b-instruct")
-tokenizer.save_pretrained("./core/model/base/llama-3.2-1b-instruct")
+model.save_pretrained(saved_path)
+tokenizer.save_pretrained(saved_path)
 
-print("✅ Model and tokenizer saved to ./llama-3.2-1b-instruct")
+print(f"✅ Model and tokenizer saved to {saved_path}")

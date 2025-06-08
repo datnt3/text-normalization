@@ -54,26 +54,26 @@ INFERENCE_REGEX_RULES = [
     #     "pattern": r"(?<![\w\/\.])(?:ngày|sáng|trưa|chiều|tối)\s*(0?[1-9]|[12][0-9]|3[01])\s*[-–—−]\s*(?:ngày|sáng|trưa|chiều|tối)?\s*(0?[1-9]|[12][0-9]|3[01])(?![\w\/])",
     #     "priority": 11,
     # },
-    # {
-    #     "name": "MM",
-    #     "pattern": r"(?<![\w\/\.])(?:tháng)\s*(0?[1-9]|1[0-2])\s*[-–—−]\s*(?:tháng\s?)?(0?[1-9]|1[0-2])(?![\w\/])",
-    #     "priority": 12,
-    # },
+    {
+        "name": "mm",
+        "pattern": r"(?<![\w\/\.])(?:tháng)\s*(0?[1-9]|1[0-2])\s*[-–—−]\s*(?:tháng\s?)?(0?[1-9]|1[0-2])(?![\w\/])",
+        "priority": 12,
+    },
     {
         "name": "yy",
         "pattern": r"(?<![\w\/\.])(?:năm)\s*([0-9]{1,4})\s*[-–—−]\s*(?:năm)?\s*([0-9]{1,4})(?![\w\/])",
         "priority": 13,
     },
-    # {
-    #     "name": "MY",
-    #     "pattern": r"(?<![\w\/\.])(?:tháng)\s*(0?[1-9]|1[0-2])\s*[\.\/\-]\s*([1-9][0-9]{2,3})(?![\w\/])",
-    #     "priority": 14,
-    # },
-    # {
-    #     "name": "DM",
-    #     "pattern": r"(?<![\w\/\.])(?:ngày|sáng|trưa|chiều|tối)\s*(0?[1-9]|[12][0-9]|3[01])\s*[\.\/\-]\s*(0?[1-9]|1[0-2])(?![\w\/])",
-    #     "priority": 15,
-    # },
+    {
+        "name": "my",
+        "pattern": r"(?<![\w\/\.])(?:tháng)\s*(0?[1-9]|1[0-2])\s*[\.\/\-]\s*([1-9][0-9]{2,3})(?![\w\/])",
+        "priority": 14,
+    },
+    {
+        "name": "dm",
+        "pattern": r"(?<![\w\/\.])(?:ngày|sáng|trưa|chiều|tối)\s*(0?[1-9]|[12][0-9]|3[01])\s*[\.\/\-]\s*(0?[1-9]|1[0-2])(?![\w\/])",
+        "priority": 15,
+    },
     {
         "name": "qy",
         "pattern": r"(?<![\w\/\.])(?:quý)\s*([0?[1-4]|I|II|III|IV])\s*[\.\/\-]\s*([1-9][0-9]{2,3})(?![\w\/])",
@@ -103,14 +103,23 @@ INFERENCE_REGEX_RULES = [
 ]
 
 CORRECT_SPELLING_DICT = {
-    "mươi một": "mươi mốt",
-    "mươi tư": "mươi bốn",
-    "tháng tư": "tháng bốn",
-    "trăm lẻ": "trăm linh",
-    "trăm không": "trăm linh",
-    "ngày mùng": "ngày",
-    "ngày mồng": "ngày",
-    "ngàn": "nghìn",
+    "mươi mốt": ["mươi một"],
+    "mươi bốn": ["mươi tư"],
+    "tháng bốn": ["tháng tư"],
+    "trăm linh": ["trăm lẻ", "trăm không"],
+    # "trăm không": "trăm linh",
+    "ngày": ["ngày mùng", "ngày mồng"],
+    # "ngày mồng": "ngày",
+    "nghìn": ["ngàn"],
+    " gam ": [" gram "],
+    "kilogam": [" kg ", " kilogram ", " ki-lô-gam ", " ki-lô-gram ", " kilôgam ", " kilôgram ", " ký ", " ký gram ", " ki lô gam ", " ki lô gram"],
+    " kilomet ": [" ki lô mét ", " km ", " ki-lo-met ", " ki-lo-mét ", " ki-lô-mét ", " kilomét ", " kilômét "],
+    " centimet ": [" cm ", " centimét ", " cen ti met ", " centi met ", "centi mét ", " cen-ti-mét ", " xen-ti-mét "],
+    " milimet ": [" milimét ", " mm ", " mi-li-mét ", "mi li mét "],
+    " nanomet ": [" nm "],
+    " hecta ": [" hécta ", " hec-ta ", " héc-ta ", " héc ta ", " ha "],
+    " mét vuông ": [" m2 "],
+    " mét khối ": [" m3 "]
 }
 
 AUGMENT_REGEX_RULES = [
@@ -170,7 +179,7 @@ AUGMENT_REGEX_RULES = [
     #     "priority": 11,
     # },
     # {
-    #     "name": "MM",
+    #     "name": "mm",
     #     "pattern": r"(?<![\w\/\.])(?:tháng)\s*(0?[1-9]|1[0-2])\s*[-–—−]\s*(?:tháng\s?)?(0?[1-9]|1[0-2])(?![\w\/])",
     #     "priority": 12,
     # },

@@ -2,6 +2,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 core/model/saved/
 data_storage/
+zip/
 *.txt
 *.tar.gz
 ### Python ###
