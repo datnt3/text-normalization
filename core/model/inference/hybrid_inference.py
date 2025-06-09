@@ -89,36 +89,69 @@ class HybirdInference(BaseInference):
       processed_text = self.postprocessor.postprocess(text=processed_text)
       return processed_text
     
-    messages = [
-    {"role": "system",
-    "content": INFER_SYS_PROMPT},
-    {"role": "user", 
-    "content": f"""Convert the NSWs in the below sentence to spoken words: {processed_text}"""}
-    ]
-    inputs = self.tokenizer.apply_chat_template(
-      messages,
-      tokenize = True,
-      add_generation_prompt = True,
-      return_tensors = "pt"
-    ).to("cuda")
-    
-    streamer = TextIteratorStreamer(self.tokenizer, skip_prompt = True, skip_special_tokens=True)
-    
-    generation_kwargs = {
-      "input_ids": inputs,
-      "streamer": streamer,
-      "max_new_tokens": 512,
-      "use_cache": True,
-      "temperature": 1.5,
-      "top_p": 0.9
-    }
-    
-    self.model.generate(**generation_kwargs)
-    predicted_label = "".join([token for token in streamer])
-    predicted_label = predicted_label.strip()
-    
-    predicted_label = self.postprocessor.postprocess(text=predicted_label)
-    
+    if "llama" in self.model_name:
+        messages = [
+        {"role": "system",
+        "content": INFER_SYS_PROMPT},
+        {"role": "user", 
+        "content": f"""Convert the NSWs in the below sentence to spoken words: {processed_text}"""}
+        ]
+        inputs = self.tokenizer.apply_chat_template(
+          messages,
+          tokenize = True,
+          add_generation_prompt = True,
+          return_tensors = "pt"
+        ).to("cuda")
+        
+        streamer = TextIteratorStreamer(self.tokenizer, skip_prompt = True, skip_special_tokens=True)
+        
+        generation_kwargs = {
+          "input_ids": inputs,
+          "streamer": streamer,
+          "max_new_tokens": 512,
+          "use_cache": True,
+          "temperature": 1.5,
+          "top_p": 0.9
+        }
+        
+        self.model.generate(**generation_kwargs)
+        predicted_label = "".join([token for token in streamer])
+        predicted_label = predicted_label.strip()
+        
+        predicted_label = self.postprocessor.postprocess(text=predicted_label)
+    if "qwen" in self.model_name:
+        messages = f"""
+            ### Instruction
+            You are a phonetic Vietnamese specialist mastering in Text normalization task in Text To Speech. Convert all the numerical non-standard words into its corresponding phonetic spoken Vietnamese form.
+
+            ### Input:
+            {processed_text}
+
+            ### Response:
+            
+            """
+
+        inputs = self.tokenizer([messages], return_tensors="pt").to("cuda")
+
+        streamer = TextIteratorStreamer(
+            self.tokenizer, skip_prompt=True, skip_special_tokens=True
+        )
+
+        generation_kwargs = {
+            **inputs,
+            "streamer": streamer,
+            "max_new_tokens": 512,
+            # "use_cache": True,
+            # "temperature": 1.5,
+            # "top_p": 0.9,
+        }
+
+        self.model.generate(**generation_kwargs)
+        predicted_label = "".join([token for token in streamer])
+        predicted_label = predicted_label.strip()
+        predicted_label = self.postprocessor.postprocess(text=predicted_label)
+        print(f"Predicted label: {predicted_label}")
+        
     return predicted_label
   
 if __name__ == "__main__":
