@@ -4,6 +4,7 @@ from unsloth import FastLanguageModel
 from transformers import TextStreamer, TextIteratorStreamer
 import pandas as pd
 import os
+from vinorm import TTSnorm
 
 import rootutils
 
@@ -32,8 +33,9 @@ class Inference(BaseInference):
     def __init__(self, data_path: str, model_name: str, correct_spelling_dict: Dict):
         self.data_path = data_path
         self.model_name = model_name
-        self.get_merged_model(model_name=self.model_name)
         self.postprocessor = PostProcessor(correct_spelling_dict=correct_spelling_dict)
+        if "llama" in self.model_name or "qwen" in self.model_name:
+            self.get_merged_model(model_name=self.model_name)
 
     def get_merged_model(self, model_name: str):
         self.model, self.tokenizer = FastLanguageModel.from_pretrained(
@@ -164,5 +166,11 @@ class Inference(BaseInference):
             # inputs = {k: v.to("cuda") for k, v in inputs.items()}
 
             # predicted_label = self.get_predicted_label(inputs=inputs)
+
+        if "vinorm" in self.model_name:
+            predicted_label = TTSnorm(input, punc=True,)
+            predicted_label = self.postprocessor.postprocess(text=predicted_label)
+            print(f"Predicted label: {predicted_label}")
+            predicted_label = predicted_label.replace(" ,", ",").replace(" ..", ".").replace(" .", ".")
 
         return predicted_label
