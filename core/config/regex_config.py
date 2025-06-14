@@ -112,7 +112,7 @@ CORRECT_SPELLING_DICT = {
     # "ngày mồng": "ngày",
     "nghìn": ["ngàn"],
     " gam ": [" gram "],
-    "kilogam": [" kg ", " kilogram ", " ki-lô-gam ", " ki-lô-gram ", " kilôgam ", " kilôgram ", " ký ", " ký gram ", " ki lô gam ", " ki lô gram"],
+    " kilogam ": [" kg ", " kilogram ", " ki-lô-gam ", " ki-lô-gram ", " kilôgam ", " kilôgram ", " ký gram ", " ki lô gam ", " ki lô gram "],
     " kilomet ": [" ki lô mét ", " km ", " ki-lo-met ", " ki-lo-mét ", " ki-lô-mét ", " kilomét ", " kilômét "],
     " centimet ": [" cm ", " centimét ", " cen ti met ", " centi met ", "centi mét ", " cen-ti-mét ", " xen-ti-mét "],
     " milimet ": [" milimét ", " mm ", " mi-li-mét ", "mi li mét "],
