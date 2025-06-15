@@ -191,11 +191,11 @@ class Eval:
 
 if __name__ == "__main__":
     file_path = "/data/datnt3/text-normalization/data_storage/train_test/2025-05-25/test_data_main.csv"
-    model_name = "/data/datnt3/text-normalization/core/model/saved/lora/2025-06-07/vn-qwen2.5-3b-augmented-2025-06-07"
+    model_name = "vinorm"
     eval = Eval(
         file_path=file_path,
         model_name=model_name,
         metric_name="exact_match",
-        inference_mode="hybrid_inference",
+        inference_mode="llm_inference",
     )
     eval.evaluate()
