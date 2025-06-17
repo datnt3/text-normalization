@@ -72,7 +72,7 @@ class Eval:
                 f"{self.model_name.split('/')[-2]}_{self.model_name.split('/')[-1]}"
             )
             saved_eval_file = f"{datetime.now().strftime('%H:%M:%S')}_{model_name_path}_{max_entries}_{SAVED_EVAL_FILE}"
-        if "vinorm" in self.model_name:
+        if "vinorm" in self.model_name or "gpt" in self.model_name or "gemini" in self.model_name:
             save_eval_dir = os.path.join(SAVED_EVAL_DIR, self.inference_mode)
             saved_eval_file = f"{datetime.now().strftime('%H:%M:%S')}_{self.model_name}_{max_entries}_{SAVED_EVAL_FILE}"
             
@@ -182,7 +182,7 @@ class Eval:
                 }
             )
 
-            if len(results) == 10:
+            if len(results) == 1:
                 save_data_to_file(results, save_eval_dir, saved_eval_file)
                 results.clear()
         if results:
@@ -190,8 +190,8 @@ class Eval:
 
 
 if __name__ == "__main__":
-    file_path = "/data/datnt3/text-normalization/data_storage/train_test/2025-05-25/test_data_main.csv"
-    model_name = "vinorm"
+    file_path = "data_storage/train_test/2025-05-25/test_data_main.csv"
+    model_name = "gpt-4o-mini"
     eval = Eval(
         file_path=file_path,
         model_name=model_name,

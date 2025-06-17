@@ -7,6 +7,7 @@ load_dotenv()
 
 # API keys
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Data
 DATA_PATH = "data_storage/raw/the-thao_7.csv"
@@ -593,3 +594,7 @@ The output must be structured in JSON format, with each element containing the f
 
 # Logging
 LOGGING_CONFIG_FILE = "core/config/logging_config.conf"
+
+INFERENCE_PROMPT = """
+You are a phonetic Vietnamese specialist mastering in Text normalization task in Text To Speech. Convert each numerical non-standard word into its spoken phonetic Vietnamese form, integrating it back into the sentence.
+"""

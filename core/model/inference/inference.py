@@ -1,10 +1,15 @@
 from typing import Dict
+from openai import OpenAI
 import unsloth
 from unsloth import FastLanguageModel
 from transformers import TextStreamer, TextIteratorStreamer
 import pandas as pd
 import os
 from vinorm import TTSnorm
+from google import genai
+from google.genai import types
+import time
+from google.api_core.exceptions import ResourceExhausted
 
 import rootutils
 
@@ -26,7 +31,7 @@ from core.config.model_config import (
     SAVED_EVAL_FILE,
     SAVED_MODEL_DIR,
 )
-from core.config.config import TRAIN_TEST_DATA_DIR, TEST_DATA_FILE
+from core.config.config import GEMINI_API_KEY, INFERENCE_PROMPT, OPENAI_API_KEY, TRAIN_TEST_DATA_DIR, TEST_DATA_FILE
 
 
 class Inference(BaseInference):
@@ -172,5 +177,45 @@ class Inference(BaseInference):
             predicted_label = self.postprocessor.postprocess(text=predicted_label)
             print(f"Predicted label: {predicted_label}")
             predicted_label = predicted_label.replace(" ,", ",").replace(" ..", ".").replace(" .", ".")
+            
+        if "gpt" in self.model_name:
+            predicted_label = ""
+            client = OpenAI(api_key = OPENAI_API_KEY)
+            model = self.model_name
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": INFERENCE_PROMPT,
+                    },
+                    {"role": "user", "content": f"Convert the NSWs in the below sentence to spoken words: {input}"},
+                ],
+            )
+            result = response.choices[0].message.content
+            predicted_label = result.strip()
+            predicted_label = self.postprocessor.postprocess(text=predicted_label)
+            
+        if "gemini" in self.model_name:
+            predicted_label = ""
+            client = genai.Client(api_key=GEMINI_API_KEY)
+            model = self.model_name
 
+            for i in range(3):
+                try:
+                    response = client.models.generate_content(
+                        model=model,
+                        config=types.GenerateContentConfig(
+                            system_instruction=INFERENCE_PROMPT),
+                        contents=f"Convert the NSWs in the below sentence to spoken words: {input}"
+                    )
+
+                    result = response.text.strip()
+                    predicted_label = self.postprocessor.postprocess(text=result)
+                    
+                    break
+                except:
+                    print(f"Rate limit error. Retrying...")
+                    time.sleep(60)
+                    
         return predicted_label
