@@ -3,6 +3,8 @@
 core/model/saved/
 data_storage/
 zip/
+images/
+*.png
 *.txt
 *.tar.gz
 ### Python ###
